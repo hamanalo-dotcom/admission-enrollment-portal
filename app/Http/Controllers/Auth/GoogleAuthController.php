@@ -215,6 +215,7 @@ if ($user && $user->role === 'student') {
                 if ($user) {
                     // User already exists, log them in instead
                     Auth::login($user);
+                    $request->session()->regenerate();
                     session()->forget(['registration_email', 'oauth_flow']);
                     return redirect()->intended('/student-dashboard')
                         ->with('success', 'Welcome back! You are now logged in.');
@@ -265,9 +266,11 @@ if ($user && $user->role === 'student') {
             }
 
         } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
+            \Log::warning('Google OAuth invalid state', ['host' => $request->getHost(), 'has_session_cookie' => $request->hasCookie(config('session.cookie'))]);
             return redirect()->route($this->oauthFailureRoute())
                 ->withErrors(['error' => 'Authentication session expired. Please try again.']);
         } catch (\GuzzleHttp\Exception\ClientException $e) {
+            \Log::error('Google OAuth token error', ['status' => optional($e->getResponse())->getStatusCode(), 'body' => optional($e->getResponse())->getBody()?->__toString()]);
             $errorMessage = 'Google OAuth configuration error. ';
             if ($e->getResponse()) {
                 $statusCode = $e->getResponse()->getStatusCode();

@@ -437,9 +437,3 @@ Route::get('/error', function () {
 Route::fallback(function () {
     return view('error');
 });
-
-
-
-
-//// Google OAuth Routes
-Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle']);
