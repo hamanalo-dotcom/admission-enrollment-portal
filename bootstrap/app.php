@@ -20,5 +20,21 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(AuditLogMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, \Illuminate\Http\Request $request) {
+            if ($e->getStatusCode() !== 419) {
+                return null;
+            }
+            if ($request->routeIs('logout')) {
+                \Illuminate\Support\Facades\Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->route('home');
+            }
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Your session has expired. Please refresh and try again.'], 419);
+            }
+            return redirect()->back()
+                ->withInput($request->except(['password', 'password_confirmation', '_token']))
+                ->withErrors(['error' => 'Your session has expired. Please try again.']);
+        });
     })->create();

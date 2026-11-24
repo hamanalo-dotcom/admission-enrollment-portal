@@ -66,26 +66,12 @@ class StudentSubjectController extends Controller
      */
     private function showSubjectsForAdmission($admission)
     {
-        // Get the student's enrollment school year if exists, otherwise use current active school year
-        $enrollment = Enrollment::where('user_id', Auth::id())->latest()->first();
-        $schoolYear = $enrollment ? $enrollment->school_year : null;
-        
-        if (!$schoolYear) {
-            $activeSchoolYear = \App\Models\SchoolYear::where('is_active', true)->first();
-            $schoolYear = $activeSchoolYear ? $activeSchoolYear->school_year : null;
-        }
-        
         $subjects = Subject::where(function($q) use ($admission) {
                 $q->whereNull('grade_level')->orWhere('grade_level', $admission->year_level);
             })
             ->when($admission->strand, function($q) use ($admission) {
                 $q->where(function($query) use ($admission) {
                     $query->whereNull('strand')->orWhere('strand', $admission->strand);
-                });
-            })
-            ->when($schoolYear, function($q) use ($schoolYear) {
-                $q->where(function($query) use ($schoolYear) {
-                    $query->whereNull('school_year')->orWhere('school_year', $schoolYear);
                 });
             })
             ->orderBy('name')
@@ -125,18 +111,13 @@ class StudentSubjectController extends Controller
             ->pluck('subject_id')
             ->unique();
         
-        // Fetch subjects based on grade level, strand, school year, and section
+        // Fetch subjects based on grade level, strand, and section
         $subjects = Subject::where(function($q) use ($enrollment) {
                 $q->whereNull('grade_level')->orWhere('grade_level', $enrollment->grade_level);
             })
             ->when($enrollment->strand, function($q) use ($enrollment) {
                 $q->where(function($query) use ($enrollment) {
                     $query->whereNull('strand')->orWhere('strand', $enrollment->strand);
-                });
-            })
-            ->when($enrollment->school_year, function($q) use ($enrollment) {
-                $q->where(function($query) use ($enrollment) {
-                    $query->whereNull('school_year')->orWhere('school_year', $enrollment->school_year);
                 });
             })
             ->when($enrollment->section && $enrollment->grade_level, function($q) use ($enrollment) {

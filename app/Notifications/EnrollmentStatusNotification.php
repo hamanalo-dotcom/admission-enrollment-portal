@@ -62,7 +62,7 @@ class EnrollmentStatusNotification extends Notification
             ->subject($subject)
             ->greeting('Hello ' . ($notifiable->firstname ?? 'Student'))
             ->line($intro)
-            ->action('View Enrollment', url('/enrollment'))
+            ->action('View Enrollment', route('student.enrollment.index'))
             ->line('This is an automated message — please do not reply.');
     }
 }

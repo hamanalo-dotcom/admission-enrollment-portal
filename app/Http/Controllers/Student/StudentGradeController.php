@@ -68,11 +68,6 @@ class StudentGradeController extends Controller
                     $query->whereNull('strand')->orWhere('strand', $currentEnrollment->strand);
                 });
             })
-            ->when($currentEnrollment->school_year, function($q) use ($currentEnrollment) {
-                $q->where(function($query) use ($currentEnrollment) {
-                    $query->whereNull('school_year')->orWhere('school_year', $currentEnrollment->school_year);
-                });
-            })
             ->when($currentEnrollment->section && $currentEnrollment->grade_level, function($q) use ($currentEnrollment, $schoolYear) {
                 // Include subjects from teacher assignments if they exist
                 $assignmentSubjectIds = TeacherSectionAssignment::where('grade_level', $currentEnrollment->grade_level)

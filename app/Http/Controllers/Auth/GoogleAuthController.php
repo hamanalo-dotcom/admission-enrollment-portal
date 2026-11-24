@@ -198,7 +198,7 @@ if ($user && $user->role === 'student') {
                     $dashboardRoute = '/teacher-dashboard';
                 }
 
-                return redirect($dashboardRoute)
+                return redirect()->intended($dashboardRoute)
                     ->with('success', 'Welcome back! You are now logged in.');
 
             } else {
