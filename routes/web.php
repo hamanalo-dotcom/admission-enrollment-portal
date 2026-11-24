@@ -60,8 +60,13 @@ Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\GoogleAuthContro
 Route::get('/admission/create', [\App\Http\Controllers\Student\StudentAdmissionController::class, 'createPublic'])->name('admission.create.public');
 Route::post('/admission', [\App\Http\Controllers\Student\StudentAdmissionController::class, 'storePublic'])->name('admission.store.public');
 Route::get('/admission/success/{admission}', [\App\Http\Controllers\Student\StudentAdmissionController::class, 'success'])->name('admission.success');
-Route::get('/admission/{admission}/download-pdf', [\App\Http\Controllers\Student\StudentAdmissionController::class, 'downloadPdf'])->name('admission.download.pdf');
 Route::get('/admission/status', [\App\Http\Controllers\Student\StudentAdmissionController::class, 'statusForm'])->name('admission.status');
+
+// Admission PDF download (guest session or authorized user)
+Route::get('/admission/{admission}/download-pdf', [
+    \App\Http\Controllers\Student\StudentAdmissionController::class,
+    'downloadPdf'
+])->name('admission.download.pdf');
 
 // Auth routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->middleware('guest')->name('login');
@@ -174,70 +179,6 @@ Route::middleware('auth')->group(function () {
         //Dashboard routes
         Route::get('/admin-dashboard', [DashboardController::class, 'index'])->name('admin.index');
 
-        // School Year Management Routes
-        Route::get('/admin/school-years', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'index'])->name('admin.school-years.index');
-        Route::get('/admin/school-years/{schoolYear}', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'show'])->name('admin.school-years.show')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
-        Route::get('/admin/school-years/{schoolYear}/download', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'download'])->name('admin.school-years.download')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
-        Route::post('/admin/school-years', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'store'])->name('admin.school-years.store');
-        Route::get('/admin/school-years/{schoolYear}/edit', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'edit'])->name('admin.school-years.edit')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
-        Route::put('/admin/school-years/{schoolYear}', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'update'])->name('admin.school-years.update')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
-        Route::post('/admin/school-years/{schoolYear}/toggle-active', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'toggleActive'])->name('admin.school-years.toggle-active')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
-        Route::post('/admin/school-years/{schoolYear}/toggle-hidden', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'toggleHidden'])->name('admin.school-years.toggle-hidden')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
-        Route::delete('/admin/school-years/{schoolYear}', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'destroy'])->name('admin.school-years.destroy')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
-        Route::get('/admin/school-years-trashed', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'trashed'])->name('admin.school-years.trashed');
-        Route::post('/admin/school-years/{schoolYear}/restore', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'restore'])->name('admin.school-years.restore')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
-        Route::delete('/admin/school-years/{schoolYear}/force-delete', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'forceDelete'])->name('admin.school-years.force-delete')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
-
-        //Junior High School Routes
-        Route::get('/admin/jhs-gradeSeven', [AdminJuniorHighController::class, 'jhsGradeSeven'])->name('admin.jhs.gradeSeven');
-        Route::get('/admin/jhs-gradeEight', [AdminJuniorHighController::class, 'jhsGradeEight'])->name('admin.jhs.gradeEight');
-        Route::get('/admin/jhs-gradeNine', [AdminJuniorHighController::class, 'jhsGradeNine'])->name('admin.jhs.gradeNine');
-        Route::get('/admin/jhs-gradeTen', [AdminJuniorHighController::class, 'jhsGradeTen'])->name('admin.jhs.gradeTen');
-
-        //Senior High School Routes
-        Route::get('/admin/shs-gradeEleven', [AdminSeniorHighController::class, 'shsGradeEleven'])->name('admin.shs.gradeEleven');
-        Route::get('/admin/shs-gradeTwelve', [AdminSeniorHighController::class, 'shsGradeTwelve'])->name('admin.shs.gradeTwelve');
-
-        // Sections management
-        Route::get('/admin/sections', [AdminSectionController::class, 'index'])->name('admin.sections.index');
-        Route::post('/admin/sections', [AdminSectionController::class, 'store'])->name('admin.sections.store');
-        Route::post('/admin/sections/add-all-defaults', [AdminSectionController::class, 'addAllDefaultSections'])->name('admin.sections.add-all-defaults');
-        Route::get('/admin/sections/grade{grade}/section-{section}/pdf', [AdminSectionController::class, 'downloadSectionPdf'])
-            ->name('admin.sections.download-pdf')
-            ->where(['grade' => '[7-9]|10|11|12', 'section' => '.+']);
-        Route::get('/admin/sections/grade{grade}/{strand}/section-{section}/pdf', [AdminSectionController::class, 'downloadStrandPdf'])
-            ->name('admin.sections.download-strand-section-pdf')
-            ->where(['grade' => '11|12', 'strand' => 'gas|tvl', 'section' => '.+']);
-        Route::get('/admin/sections/grade{grade}/{strand}/pdf', [AdminSectionController::class, 'downloadStrandPdf'])
-            ->name('admin.sections.download-strand-pdf')
-            ->where(['grade' => '11|12', 'strand' => 'gas|tvl']);
-
-        // Grades management
-        Route::get('/admin/grades', [AdminGradeController::class, 'index'])->name('admin.grades.index');
-        Route::get('/admin/grades/student/{student}', [AdminGradeController::class, 'showStudentRecord'])->name('admin.grades.student-record');
-        Route::get('/admin/grades/{grade}', [AdminGradeController::class, 'show'])->name('admin.grades.show');
-        Route::get('/admin/grades/{grade}/edit', [AdminGradeController::class, 'edit'])->name('admin.grades.edit');
-        Route::put('/admin/grades/{grade}', [AdminGradeController::class, 'update'])->name('admin.grades.update');
-        // Delete functionality removed to preserve all data
-        // Route::delete('/admin/grades/{grade}', [AdminGradeController::class, 'destroy'])->name('admin.grades.destroy');
-
-        // Reports
-        Route::get('/admin/reports', [AdminReportController::class, 'index'])->name('admin.reports.index');
-        Route::get('/admin/reports/enrollment', [AdminReportController::class, 'enrollment'])->name('admin.reports.enrollment');
-        Route::get('/admin/reports/admission', [AdminReportController::class, 'admission'])->name('admin.reports.admission');
-        Route::get('/admin/reports/grade', [AdminReportController::class, 'grade'])->name('admin.reports.grade');
-        Route::get('/admin/reports/teacher-assignment', [AdminReportController::class, 'teacherAssignment'])->name('admin.reports.teacherAssignment');
-        Route::get('/admin/reports/statistics', [AdminReportController::class, 'statistics'])->name('admin.reports.statistics');
-
-        // Subjects management
-        Route::get('/admin/subjects', [AdminSubjectController::class, 'index'])->name('admin.subjects.index');
-        Route::get('/admin/subjects/create', [AdminSubjectController::class, 'create'])->name('admin.subjects.create');
-        Route::post('/admin/subjects', [AdminSubjectController::class, 'store'])->name('admin.subjects.store');
-        Route::get('/admin/subjects/{subject}/edit', [AdminSubjectController::class, 'edit'])->name('admin.subjects.edit');
-        Route::put('/admin/subjects/{subject}', [AdminSubjectController::class, 'update'])->name('admin.subjects.update');
-        // Delete functionality removed to preserve all data
-        // Route::delete('/admin/subjects/{subject}', [AdminSubjectController::class, 'destroy'])->name('admin.subjects.destroy');
-
         // User Management Routes
         Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
         Route::get('/admin/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');
@@ -247,24 +188,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
         Route::put('/admin/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
         Route::put('/admin/users/{user}/change-password', [AdminUserController::class, 'changePassword'])->name('admin.users.changePassword');
-        // Delete functionality removed to preserve all data
-        // Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
-
-        // Teacher Assignment Routes
-        Route::get('/admin/teacher-assignments', [AdminTeacherAssignmentController::class, 'index'])->name('admin.teacher-assignments.index');
-        Route::get('/admin/teacher-assignments/create', [AdminTeacherAssignmentController::class, 'create'])->name('admin.teacher-assignments.create');
-        Route::post('/admin/teacher-assignments', [AdminTeacherAssignmentController::class, 'store'])->name('admin.teacher-assignments.store');
-        Route::get('/admin/teacher-assignments/{teacherAssignment}/edit', [AdminTeacherAssignmentController::class, 'edit'])->name('admin.teacher-assignments.edit');
-        Route::put('/admin/teacher-assignments/{teacherAssignment}', [AdminTeacherAssignmentController::class, 'update'])->name('admin.teacher-assignments.update');
-        // Delete functionality removed to preserve all data
-        // Route::delete('/admin/teacher-assignments/{teacherAssignment}', [AdminTeacherAssignmentController::class, 'destroy'])->name('admin.teacher-assignments.destroy');
-        Route::get('/admin/teacher-assignments/sections', [AdminTeacherAssignmentController::class, 'getSections'])->name('admin.teacher-assignments.sections');
-
-        // Enrollment permanent delete (admin only)
-        Route::delete('/admin/enrollments/{id}/force-delete', [\App\Http\Controllers\Admin\AdminEnrollmentController::class, 'forceDelete'])->name('admin.enrollments.forceDelete');
-
-
-        Route::post('/send-sms', [SmsController::class, 'sendSms'])->name('send.sms');
     });
 
     //Registrar routes
@@ -289,11 +212,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/registrar/admissions/{admission}/file/{field}', [RegistrarAdmissionController::class, 'updateFileStatus'])->name('registrar.admissions.updateFileStatus');
         Route::put('/registrar/enrollments/{enrollment}/status', [RegistrarEnrollmentController::class, 'updateEnrollmentStatus'])->name('registrar.enrollments.updateEnrollmentStatus');
 
-        // Enrollment routes
+        // Enrollment routes (creation and submission handled by StudentEnrollmentController)
         Route::get('/registrar/enrollment', [RegistrarEnrollmentController::class, 'index'])->name('registrar.enrollment.index');
         Route::get('/registrar/enrollment/{enrollment}', [RegistrarEnrollmentController::class, 'show'])->name('registrar.enrollment.show');
-        Route::get('/registrar/enrollment/create', [RegistrarEnrollmentController::class, 'create'])->name('registrar.enrollment.create');
-        Route::post('/registrar/enrollment', [RegistrarEnrollmentController::class, 'store'])->name('registrar.enrollment.store');
         Route::delete('/registrar/enrollment/{enrollment}', [RegistrarEnrollmentController::class, 'destroy'])->name('registrar.enrollment.destroy');
         Route::put('/registrar/enrollment/{id}/restore', [RegistrarEnrollmentController::class, 'restore'])->name('registrar.enrollment.restore');
 
@@ -344,7 +265,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/registrar/school-years/{schoolYear}', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'destroy'])->name('registrar.school-years.destroy')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
         Route::get('/registrar/school-years-trashed', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'trashed'])->name('registrar.school-years.trashed');
         Route::post('/registrar/school-years/{schoolYear}/restore', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'restore'])->name('registrar.school-years.restore')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
-        Route::delete('/registrar/school-years/{schoolYear}/force-delete', [\App\Http\Controllers\Admin\AdminSchoolYearController::class, 'forceDelete'])->name('registrar.school-years.force-delete')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
+        // Permanent deletion is disabled: Route::delete('/registrar/school-years/{schoolYear}/force-delete', ...) removed to preserve all historical records.
 
         // Sections management (reusing AdminSectionController)
         Route::get('/registrar/sections', [AdminSectionController::class, 'index'])->name('registrar.sections.index');
@@ -369,22 +290,6 @@ Route::middleware('auth')->group(function () {
         // Delete functionality removed to preserve all data
         // Route::delete('/registrar/subjects/{subject}', [AdminSubjectController::class, 'destroy'])->name('registrar.subjects.destroy');
 
-        // Teachers/Users management (reusing AdminUserController, filtered for teachers)
-        Route::get('/registrar/teachers', [AdminUserController::class, 'index'])->name('registrar.teachers.index');
-        Route::get('/registrar/teachers/create', [AdminUserController::class, 'create'])->name('registrar.teachers.create');
-        Route::post('/registrar/teachers', [AdminUserController::class, 'store'])->name('registrar.teachers.store');
-        Route::get('/registrar/teachers/generate-password', [AdminUserController::class, 'generatePassword'])->name('registrar.teachers.generatePassword');
-        Route::get('/registrar/teachers/{user}', [AdminUserController::class, 'show'])->name('registrar.teachers.show');
-        Route::get('/registrar/teachers/{user}/edit', [AdminUserController::class, 'edit'])->name('registrar.teachers.edit');
-        Route::put('/registrar/teachers/{user}', [AdminUserController::class, 'update'])->name('registrar.teachers.update');
-        Route::put('/registrar/teachers/{user}/change-password', [AdminUserController::class, 'changePassword'])->name('registrar.teachers.changePassword');
-        // Delete functionality removed to preserve all data
-        // Route::delete('/registrar/teachers/{user}', [AdminUserController::class, 'destroy'])->name('registrar.teachers.destroy');
-
-        // Users creation (registrar can add users)
-        Route::get('/registrar/users/create', [AdminUserController::class, 'create'])->name('registrar.users.create');
-        Route::post('/registrar/users', [AdminUserController::class, 'store'])->name('registrar.users.store');
-
         // Teacher Assignment Routes (reusing AdminTeacherAssignmentController)
         Route::get('/registrar/teacher-assignments', [AdminTeacherAssignmentController::class, 'index'])->name('registrar.teacher-assignments.index');
         Route::get('/registrar/teacher-assignments/create', [AdminTeacherAssignmentController::class, 'create'])->name('registrar.teacher-assignments.create');
@@ -403,7 +308,16 @@ Route::middleware('auth')->group(function () {
         Route::put('/registrar/grades/{grade}', [AdminGradeController::class, 'update'])->name('registrar.grades.update');
         // Delete functionality removed to preserve all data
         // Route::delete('/registrar/grades/{grade}', [AdminGradeController::class, 'destroy'])->name('registrar.grades.destroy');
+
+        // Operational Reports and Statistics (reusing AdminReportController)
+        Route::get('/registrar/reports', [AdminReportController::class, 'index'])->name('registrar.reports.index');
+        Route::get('/registrar/reports/enrollment', [AdminReportController::class, 'enrollment'])->name('registrar.reports.enrollment');
+        Route::get('/registrar/reports/admission', [AdminReportController::class, 'admission'])->name('registrar.reports.admission');
+        Route::get('/registrar/reports/grade', [AdminReportController::class, 'grade'])->name('registrar.reports.grade');
+        Route::get('/registrar/reports/teacher-assignment', [AdminReportController::class, 'teacherAssignment'])->name('registrar.reports.teacherAssignment');
+        Route::get('/registrar/reports/statistics', [AdminReportController::class, 'statistics'])->name('registrar.reports.statistics');
     });
+
 
 
     // File download (auth users: owner or staff)
@@ -474,20 +388,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/teacher/profile/edit', [\App\Http\Controllers\Teacher\TeacherProfileController::class, 'edit'])->name('teacher.profile.edit');
         Route::put('/teacher/profile', [\App\Http\Controllers\Teacher\TeacherProfileController::class, 'update'])->name('teacher.profile.update');
 
-        // Teacher Subjects (add only)
-        Route::get('/teacher/subjects/create', [\App\Http\Controllers\Teacher\TeacherSubjectController::class, 'create'])->name('teacher.subjects.create');
-        Route::post('/teacher/subjects', [\App\Http\Controllers\Teacher\TeacherSubjectController::class, 'store'])->name('teacher.subjects.store');
-
         // Grade submission routes
         Route::get('/teacher/grades', [TeacherGradeController::class, 'index'])->name('teacher.grades.index');
         Route::get('/teacher/grades/create', [TeacherGradeController::class, 'create'])->name('teacher.grades.create');
         Route::post('/teacher/grades', [TeacherGradeController::class, 'store'])->name('teacher.grades.store');
 
-        // School Year Management Routes
+        // School Year Viewing Routes (assigned sections only; visibility management restricted to Registrar)
         Route::get('/teacher/school-years', [\App\Http\Controllers\Teacher\TeacherSchoolYearController::class, 'index'])->name('teacher.school-years.index');
         Route::get('/teacher/school-years/{schoolYear}', [\App\Http\Controllers\Teacher\TeacherSchoolYearController::class, 'show'])->name('teacher.school-years.show')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
         Route::get('/teacher/school-years/{schoolYear}/download', [\App\Http\Controllers\Teacher\TeacherSchoolYearController::class, 'download'])->name('teacher.school-years.download')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
-        Route::post('/teacher/school-years/{schoolYear}/toggle-hidden', [\App\Http\Controllers\Teacher\TeacherSchoolYearController::class, 'toggleHidden'])->name('teacher.school-years.toggle-hidden')->where('schoolYear', '[0-9]{4}-[0-9]{4}');
 
         //Junior High School Routes
         Route::get('/teacher/jhs-gradeSeven', [TeacherJuniorHighController::class, 'jhsGradeSeven'])->name('teacher.jhs.gradeSeven');

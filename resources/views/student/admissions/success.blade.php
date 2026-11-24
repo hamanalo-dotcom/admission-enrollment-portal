@@ -40,16 +40,19 @@
                     </div>
 
                     <div class="row mt-4">
-                        <div class="col-md-4 mb-3">
-                            <a href="{{ route('admission.download.pdf', $admission->id) }}" class="btn btn-success w-100">
-                                <i class="fas fa-download"></i> Download PDF
-                            </a>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <button onclick="window.print()" class="btn btn-primary w-100">
-                                <i class="fas fa-print"></i> Print Application
-                            </button>
-                        </div>
+    <div class="col-md-4 mb-3">
+        <a href="{{ route('admission.download.pdf', $admission->id) }}"
+           class="btn btn-success w-100">
+            <i class="fas fa-download"></i> Download PDF
+        </a>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <button onclick="window.print()" class="btn btn-primary w-100">
+            <i class="fas fa-print"></i> Print Application
+        </button>
+    </div>
+</div>
                         <div class="col-md-4 mb-3">
                             @if(Auth::check())
                                 <a href="{{ route('student.admissions.show', $admission->id) }}" class="btn btn-outline-primary w-100">

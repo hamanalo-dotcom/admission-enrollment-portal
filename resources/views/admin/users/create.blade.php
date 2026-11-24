@@ -1,125 +1,12 @@
 @extends('layout.app')
 
 @section('content')
-<style>
-    .container-box {
-        max-width: 900px;
-        margin: 30px auto;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-        padding: 30px;
-    }
-    .form-label {
-        font-weight: 600;
-        color: #2c5aa0;
-    }
-    .btn-primary {
-        background: linear-gradient(135deg, #2c5aa0 0%, #526c86 100%);
-        border: none;
-        color: #fff;
-    }
-    .btn-primary:hover {
-        background: linear-gradient(135deg, #1e4170 0%, #3e5370 100%);
-    }
-</style>
-
-<div class="container-box">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">Add New User</h3>
-        <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form action="{{ route('admin.users.store') }}" method="POST">
-        @csrf
-        <div class="row g-3">
-            <div class="col-md-4">
-                <label class="form-label">First Name *</label>
-                <input type="text" name="firstname" class="form-control" value="{{ old('firstname') }}" required>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Middle Name</label>
-                <input type="text" name="middlename" class="form-control" value="{{ old('middlename') }}">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Last Name *</label>
-                <input type="text" name="lastname" class="form-control" value="{{ old('lastname') }}" required>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Email *</label>
-                <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Birthdate *</label>
-                <input type="date" name="birthdate" class="form-control" value="{{ old('birthdate') }}" required>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Sex *</label>
-                <select name="sex" class="form-control" required>
-                    <option value="">Select</option>
-                    <option value="male" {{ old('sex')=='male'?'selected':'' }}>Male</option>
-                    <option value="female" {{ old('sex')=='female'?'selected':'' }}>Female</option>
-                    <option value="other" {{ old('sex')=='other'?'selected':'' }}>Other</option>
-                </select>
-            </div>
-
-            <div class="col-md-4">
-                <label class="form-label">Contact No.</label>
-                <input type="text" name="contact_no" class="form-control" value="{{ old('contact_no') }}">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Emergency Contact</label>
-                <input type="text" name="emergency_contact" class="form-control" value="{{ old('emergency_contact') }}">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Role *</label>
-                <select name="role" class="form-control" required>
-                    <option value="">Select role</option>
-                    <option value="admin" {{ old('role')=='admin'?'selected':'' }}>Admin</option>
-                    <option value="registrar" {{ old('role')=='registrar'?'selected':'' }}>Registrar</option>
-                    <option value="teacher" {{ old('role')=='teacher'?'selected':'' }}>Teacher</option>
-                    <option value="student" {{ old('role')=='student'?'selected':'' }}>Student</option>
-                </select>
-            </div>
-
-            <div class="col-md-12">
-                <label class="form-label">Address</label>
-                <input type="text" name="address" class="form-control" value="{{ old('address') }}">
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Password *</label>
-                <input type="password" name="password" class="form-control" required>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Confirm Password *</label>
-                <input type="password" name="password_confirmation" class="form-control" required>
-            </div>
-        </div>
-
-        <div class="mt-4 d-flex justify-content-end gap-2">
-            <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">Cancel</a>
-            <button type="submit" class="btn btn-primary">Create User</button>
-        </div>
-    </form>
-</div>
-@endsection
-@extends('layout.app')
-
-@section('content')
+@php
+    $indexRoute = route('admin.users.index');
+    $storeRoute = route('admin.users.store');
+    $pageTitle = 'Add New User';
+    $selectedRole = old('role');
+@endphp
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -251,7 +138,7 @@
 
     <div class="main-content">
         <div class="header-section">
-            <h1>Add New User</h1>
+            <h1>{{ $pageTitle }}</h1>
         </div>
 
         @if($errors->any())
@@ -265,7 +152,7 @@
         @endif
 
         <div class="form-container">
-            <form action="{{ route('admin.users.store') }}" method="POST">
+            <form action="{{ $storeRoute }}" method="POST">
                 @csrf
 
                 <div class="form-grid">
@@ -290,16 +177,20 @@
                         <small style="color: #666; font-size: 12px; margin-top: 5px;">Note: @deped.gov.ph emails will automatically be assigned teacher role</small>
                     </div>
 
-                    <div class="form-group">
-                        <label for="role">Role *</label>
-                        <select id="role" name="role" required>
-                            <option value="">-- Select Role --</option>
-                            <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                            <option value="registrar" {{ old('role') == 'registrar' ? 'selected' : '' }}>Registrar</option>
-                            <option value="teacher" {{ old('role') == 'teacher' ? 'selected' : '' }}>Teacher</option>
-                            <option value="student" {{ old('role') == 'student' ? 'selected' : '' }}>Student</option>
-                        </select>
-                    </div>
+                    
+<div class="form-group" id="roleSelectionGroup">
+    <label for="role">Role *</label>
+    <select id="role" name="role" required>
+        <option value="">-- Select Role --</option>
+        <option value="admin" {{ $selectedRole == 'admin' ? 'selected' : '' }}>Admin</option>
+        <option value="registrar" {{ $selectedRole == 'registrar' ? 'selected' : '' }}>Registrar</option>
+        <option value="teacher" {{ $selectedRole == 'teacher' ? 'selected' : '' }}>Teacher</option>
+        <option value="student" {{ $selectedRole == 'student' ? 'selected' : '' }}>Student</option>
+    </select>
+</div>
+
+<input type="hidden" id="automaticRole" name="role" value="teacher" disabled>
+
 
                     <div class="form-group">
                         <label for="birthdate">Birth Date *</label>
@@ -327,8 +218,8 @@
                     </div>
 
                     <div class="form-group full-width">
-                        <label for="address">Address</label>
-                        <input type="text" id="address" name="address" value="{{ old('address') }}">
+                        <label for="address">Address *</label>
+                        <input type="text" id="address" name="address" value="{{ old('address') }}" required>
                     </div>
 
                     <div class="form-group">
@@ -343,11 +234,41 @@
 
                     <div class="form-group full-width" style="margin-top: 20px; display: flex; gap: 15px;">
                         <button type="submit" class="btn btn-primary">Create User</button>
-                        <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Cancel</a>
+                        <a href="{{ $indexRoute }}" class="btn btn-secondary">Cancel</a>
                     </div>
                 </div>
             </form>
         </div>
     </div>
-@endsection
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const emailInput = document.getElementById('email');
+    const roleGroup = document.getElementById('roleSelectionGroup');
+    const roleSelect = document.getElementById('role');
+    const automaticRole = document.getElementById('automaticRole');
 
+    function updateRoleField() {
+        const email = emailInput.value.trim().toLowerCase();
+        const isDepEdEmail = email.endsWith('@deped.gov.ph');
+
+        if (isDepEdEmail) {
+            roleGroup.style.display = 'none';
+            roleSelect.disabled = true;
+            roleSelect.required = false;
+
+            automaticRole.disabled = false;
+        } else {
+            roleGroup.style.display = '';
+            roleSelect.disabled = false;
+            roleSelect.required = true;
+
+            automaticRole.disabled = true;
+        }
+    }
+
+    emailInput.addEventListener('input', updateRoleField);
+
+    updateRoleField();
+});
+</script>
+@endsection

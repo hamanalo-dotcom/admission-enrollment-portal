@@ -69,22 +69,12 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>School Year</label>
-                    <select name="school_year" id="school_year">
-                        <option value="">All School Years</option>
-                        @foreach($allSchoolYears as $sy)
-                            <option value="{{ $sy }}" {{ old('school_year')==$sy ? 'selected' : '' }}>{{ $sy }}</option>
-                        @endforeach
-                    </select>
-                    <small class="form-text text-muted">Select a specific school year for this subject, or leave blank for all school years.</small>
-                </div>
-                <div class="form-group">
                     <label>Description</label>
                     <textarea name="description" rows="4">{{ old('description') }}</textarea>
                 </div>
                 <div class="actions">
                     <button class="btn-primary" type="submit">Save</button>
-                    <a class="btn-secondary" href="{{ route('admin.subjects.index') }}">Cancel</a>
+                    <a class="btn-secondary" href="{{ request()->routeIs('registrar.*') ? route('registrar.subjects.index') : route('admin.subjects.index') }}">Cancel</a>
                 </div>
             </form>
         </div>

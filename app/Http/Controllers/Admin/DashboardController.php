@@ -5,18 +5,25 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Admission;
 use App\Models\Enrollment;
+use App\Models\User;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // KPI Metrics (same as registrar)
+        // KPI Metrics (School Statistics)
         $totalApplications = Admission::where('is_draft', false)->count();
         $totalEnrolled = Enrollment::where('status', 'enrolled')->count();
         $totalPending = Admission::where('is_draft', false)->where('status', 'pending')->count();
         $totalRejected = Admission::where('is_draft', false)->where('status', 'rejected')->count();
         $totalPendingEnrollment = Enrollment::whereIn('status', ['pending'])->count();
+
+        // Account Statistics
+        $totalUsers = User::count();
+        $totalStudents = User::where('role', 'student')->count();
+        $totalTeachers = User::where('role', 'teacher')->count();
+        $totalAdmins = User::whereIn('role', ['admin', 'registrar'])->count();
 
         // Bar Chart: Applicants per Grade Level
         $applicantsByGrade = Admission::where('is_draft', false)
@@ -79,7 +86,11 @@ class DashboardController extends Controller
             'applicantsByGrade',
             'studentDistribution',
             'dailyApplicants',
-            'weeklyApplicants'
+            'weeklyApplicants',
+            'totalUsers',
+            'totalStudents',
+            'totalTeachers',
+            'totalAdmins'
         ));
     }
 }

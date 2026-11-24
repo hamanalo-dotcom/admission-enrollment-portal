@@ -251,29 +251,10 @@ class TeacherSchoolYearController extends Controller
     }
 
     /**
-     * Toggle hidden status of school year
+     * Toggle hidden status of school year (Restricted to Registrar)
      */
     public function toggleHidden(Request $request, $schoolYear)
     {
-        $schoolYearRecord = SchoolYear::where('school_year', $schoolYear)->first();
-        
-        if (!$schoolYearRecord) {
-            return back()->with('error', 'School year not found.');
-        }
-
-        $schoolYearRecord->update([
-            'is_hidden' => !$schoolYearRecord->is_hidden,
-        ]);
-
-        $status = $schoolYearRecord->is_hidden ? 'hidden' : 'unhidden';
-        
-        // Preserve show_hidden parameter if it was set
-        $redirectParams = [];
-        if ($request->has('show_hidden') && $request->show_hidden) {
-            $redirectParams['show_hidden'] = 1;
-        }
-        
-        return redirect()->route('teacher.school-years.index', $redirectParams)
-            ->with('success', "School year {$status} successfully!");
+        abort(403, 'Unauthorized action. Managing school year visibility is restricted to Registrars.');
     }
 }

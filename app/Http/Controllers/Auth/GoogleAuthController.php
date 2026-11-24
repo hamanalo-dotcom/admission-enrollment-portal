@@ -102,6 +102,31 @@ class GoogleAuthController extends Controller
             // Check if user already exists
             $user = User::where('email', $googleEmail)->first();
 
+// Enforce Registrar approval for existing student accounts
+if ($user && $user->role === 'student') {
+    $hasApprovedAdmission = $user->admissions()
+        ->where('status', 'approved')
+        ->where('is_draft', false)
+        ->exists();
+
+    if (!$hasApprovedAdmission) {
+        $failureRoute = $flow === 'registration'
+            ? 'register.form'
+            : 'login.student';
+
+        session()->forget([
+            'oauth_flow',
+            'oauth_role',
+            'registration_email'
+        ]);
+
+        return redirect()->route($failureRoute)
+            ->withErrors([
+                'email' => 'Your admission application has not yet been approved by the Registrar. You cannot access the student portal yet.'
+            ]);
+    }
+}
+
             if ($flow === 'login') {
                 // LOGIN FLOW (auto-create student if approved admission exists)
                 if (!$user) {

@@ -317,6 +317,11 @@ class StudentAdmissionController extends Controller
                 ->with('success', 'Draft saved. You can apply it later after logging in.');
         }
 
+       // Store temporary authorization for the guest applicant's confirmation and PDF
+session([
+    'submitted_admission_id' => $admission->id,
+    'downloadable_admission_id' => $admission->id,
+]);
         // Redirect to success page with reference number
         return redirect()->route('admission.success', $admission->id)
             ->with('success', 'Admission applied successfully!');
@@ -496,36 +501,120 @@ class StudentAdmissionController extends Controller
                 ->with('success', 'Draft saved. You can apply it later.');
         }
 
+       // Store temporary authorization for guest confirmation and PDF download
+session([
+    'submitted_admission_id' => $admission->id,
+    'downloadable_admission_id' => $admission->id,
+]);
+
         // Redirect to success page with reference number
         return redirect()->route('admission.success', $admission->id)
             ->with('success', 'Admission applied successfully!');
     }
 
-    // Show success page after admission submission
-    public function success(Admission $admission)
-    {
-        $isPublic = !Auth::check();
-        return view('student.admissions.success', compact('admission', 'isPublic'));
+    
+// Show success page after admission submission
+public function success(Request $request, Admission $admission)
+{
+    $isAuthorized = false;
+    $isPublic = !Auth::check();
+
+    // Allow Registrar or the student who owns this admission
+    if (Auth::check()) {
+        $user = Auth::user();
+
+        if (
+            $user->role === \App\Models\User::ROLE_REGISTRAR ||
+            (
+                $user->role === \App\Models\User::ROLE_STUDENT &&
+                (int) $user->id === (int) $admission->user_id
+            )
+        ) {
+            $isAuthorized = true;
+        }
     }
+
+    // Allow a guest applicant who just submitted this admission.
+    // Keep the session authorization available for the applicant's PDF download.
+    if (!$isAuthorized && !Auth::check()) {
+        $submittedAdmissionId = $request->session()->get('submitted_admission_id');
+
+        if (
+            $submittedAdmissionId !== null &&
+            (int) $submittedAdmissionId === (int) $admission->id
+        ) {
+            $isAuthorized = true;
+           
+        }
+    }
+
+    // Allow access through a valid signed URL
+    if (!$isAuthorized && $request->hasValidSignature()) {
+        $isAuthorized = true;
+    }
+
+    if (!$isAuthorized) {
+        abort(403, 'Unauthorized action. You do not have permission to view this admission confirmation.');
+    }
+
+    return view('student.admissions.success', compact('admission', 'isPublic'));
+}
 
     /**
      * Download admission application as PDF
      */
-    public function downloadPdf(Admission $admission)
-    {
-        // Load necessary relationships for the PDF
-        $admission->load(['region', 'province', 'city', 'barangay']);
-        
-        // Generate PDF using dompdf
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('student.admissions.admission-pdf', compact('admission'));
-        
-        // Set paper size and orientation
-        $pdf->setPaper('A4', 'portrait');
-        
-        // Download the PDF with a filename
-        $filename = 'admission-' . $admission->reference_number . '.pdf';
-        return $pdf->download($filename);
+    /**
+ * Download admission application as PDF
+ */
+public function downloadPdf(Request $request, Admission $admission)
+{
+    $isAuthorized = false;
+
+    // Registrar or owner student
+    if (Auth::check()) {
+        $user = Auth::user();
+
+        if (
+            $user->role === \App\Models\User::ROLE_REGISTRAR ||
+            (
+                $user->role === \App\Models\User::ROLE_STUDENT &&
+                (int) $user->id === (int) $admission->user_id
+            )
+        ) {
+            $isAuthorized = true;
+        }
     }
+
+    // Guest applicant: allow only the admission submitted in this session
+    if (!$isAuthorized && !Auth::check()) {
+        $downloadableAdmissionId = $request->session()->get('downloadable_admission_id');
+
+        if (
+            $downloadableAdmissionId !== null &&
+            (int) $downloadableAdmissionId === (int) $admission->id
+        ) {
+            $isAuthorized = true;
+        }
+    }
+
+    if (!$isAuthorized) {
+        abort(403, 'You are not authorized to download this admission PDF.');
+    }
+
+    $admission->load(['region', 'province', 'city', 'barangay']);
+
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+        'student.admissions.admission-pdf',
+        compact('admission')
+    );
+
+    $pdf->setPaper('A4', 'portrait');
+
+    $filename = 'admission-' .
+        ($admission->reference_number ?: $admission->id) . '.pdf';
+
+    return $pdf->download($filename);
+}
 
     /**
      * Show admission status lookup form (by reference number).
@@ -545,7 +634,7 @@ class StudentAdmissionController extends Controller
     // Show single admission
     public function show(Admission $admission)
     {
-        // $this->authorize('view', $admission);
+        $this->authorize('view', $admission);
         return view('student.admissions.show', compact('admission'));
     }
 

@@ -179,6 +179,7 @@ class AdminTeacherAssignmentController extends Controller
         foreach ($sections as $section) {
             // Check if assignment already exists (handle strand nullable properly)
             $exists = TeacherSectionAssignment::where('teacher_id', $validated['teacher_id'])
+                ->where('subject_id', $validated['subject_id'])
                 ->where('grade_level', $validated['grade_level'])
                 ->where('section', $section)
                 ->where('school_year', $validated['school_year'])
@@ -229,7 +230,8 @@ class AdminTeacherAssignmentController extends Controller
             if ($skippedCount > 0) {
                 $message .= " {$skippedCount} section(s) were already assigned.";
             }
-            return redirect()->route('admin.teacher-assignments.index')
+            $redirectRoute = $request->routeIs('registrar.*') ? 'registrar.teacher-assignments.index' : 'admin.teacher-assignments.index';
+            return redirect()->route($redirectRoute)
                 ->with('success', $message);
         } else {
             return back()->withErrors(['assignment' => 'All selected sections are already assigned to this teacher for this school year.'])->withInput();
@@ -332,6 +334,7 @@ class AdminTeacherAssignmentController extends Controller
         // Check if assignment already exists (excluding current assignment)
         $exists = TeacherSectionAssignment::where('id', '!=', $teacherAssignment->id)
             ->where('teacher_id', $validated['teacher_id'])
+            ->where('subject_id', $validated['subject_id'])
             ->where('grade_level', $validated['grade_level'])
             ->where('section', $validated['section'])
             ->where('school_year', $validated['school_year'])
@@ -378,7 +381,8 @@ class AdminTeacherAssignmentController extends Controller
             ]));
         }
 
-        return redirect()->route('admin.teacher-assignments.index')
+        $redirectRoute = $request->routeIs('registrar.*') ? 'registrar.teacher-assignments.index' : 'admin.teacher-assignments.index';
+        return redirect()->route($redirectRoute)
             ->with('success', 'Teacher assignment updated successfully!');
     }
 
@@ -401,7 +405,8 @@ class AdminTeacherAssignmentController extends Controller
         // $teacherAssignment->delete(); // Disabled to preserve data
 
         // Data preservation: Delete functionality has been disabled
-        return redirect()->route('admin.teacher-assignments.index')
+        $redirectRoute = $request->routeIs('registrar.*') ? 'registrar.teacher-assignments.index' : 'admin.teacher-assignments.index';
+        return redirect()->route($redirectRoute)
             ->with('error', 'Delete functionality has been disabled to preserve all data.');
     }
 
@@ -435,6 +440,18 @@ class AdminTeacherAssignmentController extends Controller
         }
 
         $sections = $query->orderBy('name')->pluck('name')->unique()->values()->toArray();
+
+        // TVL branch filter: the sections table has no tvl_branch column, so all TVL sections
+        // (CSS and EIM) share strand='TVL'. We apply a name-based lookup post-query to restrict
+        // results to only the sections that belong to the selected TVL branch.
+        if ($isShs && $strand === 'TVL' && $tvlBranch && !empty($sections)) {
+            $tvlBranchSectionMap = [
+                'CSS' => ['PADOLINA', 'TITANIA'],
+                'EIM' => ['ZARA', 'ALCARAZ', 'PROTEUS'],
+            ];
+            $allowed = $tvlBranchSectionMap[$tvlBranch] ?? [];
+            $sections = array_values(array_filter($sections, fn($name) => in_array($name, $allowed)));
+        }
 
         // Fallback defaults if DB has no entries yet
         if (empty($sections)) {

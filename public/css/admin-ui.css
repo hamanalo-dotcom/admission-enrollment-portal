@@ -1,19 +1,9 @@
-/* Unified Admin/Student UI Styles */
-:root {
-  --primary:#2c5aa0; --muted:#6b778c; --bg:#f5f7fa; --card:#ffffff; --radius:12px;
-}
-body { background: var(--bg); font-family: 'Poppins', sans-serif; }
-.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; background:linear-gradient(135deg,#ffffff 0%,#e8f1f9 50%,#d4e7f5 100%); padding:24px; border-radius:var(--radius); box-shadow:0 8px 32px rgba(30,58,95,.15); border:1px solid rgba(255,255,255,.6) }
-.page-header h1, .page-header h2, .page-header h3 { color:var(--primary); margin:0; font-weight:700 }
-.section-card { background:var(--card); border-radius:var(--radius); box-shadow:0 8px 24px rgba(30,58,95,.1); padding:24px; margin-bottom:20px; border:1px solid #edf2f7 }
-.section-card h5 { color:var(--primary); font-weight:600 }
-.table-wrap { background:var(--card); border-radius:var(--radius); padding:24px; box-shadow:0 8px 24px rgba(30,58,95,.1); border:1px solid #edf2f7 }
-.status-badge { display:inline-block; padding:6px 12px; border-radius:20px; font-weight:600; font-size:12px }
-.status-pending{ background:#fff3cd; color:#856404 }
-.status-approved,.status-enrolled{ background:#d4edda; color:#155724 }
-.status-rejected,.status-cancelled{ background:#f8d7da; color:#721c24 }
-.status-completed{ background:#cfe2ff; color:#084298 }
-.btn-icon{ padding:10px 12px; border:1px solid #d4e5f3; border-radius:8px; display:inline-flex; align-items:center; gap:6px; text-decoration:none; color:var(--primary); background:#fff }
-.btn-icon:hover{ background:linear-gradient(135deg,#2c5aa0 0%,#526c86 100%); color:#fff; border-color:#2c5aa0 }
-.form-title{ color:var(--primary); font-weight:700 }
+/* ============================================================================
+   admin-ui.css — Project-specific overrides that sit on top of design-system.css
+   ============================================================================ */
 
+/* (All base tokens, layout, table, button, card, pagination, badge, alert,
+   modal, form, and empty-state styles are now in design-system.css.)
+
+   This file is kept for any page-specific or legacy compatibility overrides
+   that don't belong in the design system. */

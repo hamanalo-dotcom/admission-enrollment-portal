@@ -14,7 +14,7 @@
     <div class="main-content">
         <div class="header-section">
             <h1 style="margin:0; color:#2c5aa0;">Teacher Assignment Report</h1>
-            <a href="{{ route('admin.reports.index') }}" class="btn-secondary" style="margin-top:10px; display:inline-block;">← Back to Reports</a>
+            <a href="{{ route('registrar.reports.index') }}" class="btn-secondary" style="margin-top:10px; display:inline-block;">← Back to Reports</a>
             <p class="muted" style="margin-top:8px;">Showing assignments for: {{ $currentSchoolYear ?? 'All years' }}</p>
         </div>
 

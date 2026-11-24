@@ -1,6 +1,13 @@
 @extends('layout.app')
 
 @section('content')
+@php
+    $indexRoute = route('admin.users.index');
+    $updateRoute = route('admin.users.update', $user->id);
+    $changePasswordRoute = route('admin.users.changePassword', $user->id);
+    $generatePasswordRoute = route('admin.users.generatePassword');
+    $pageHeading = 'Edit User';
+@endphp
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -128,11 +135,54 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Modal & Backdrop Fixes for Stacking Context & Interactivity */
+        #passwordModal {
+            z-index: 1065 !important;
+        }
+
+        #passwordModal .modal-dialog {
+            z-index: 1066 !important;
+            margin-top: 10vh;
+        }
+
+        #passwordModal .modal-content {
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            border: 1px solid #d4e5f3;
+            background-color: #ffffff;
+            position: relative;
+            z-index: 1067 !important;
+        }
+
+        #passwordModal .modal-header {
+            border-bottom: 1px solid #e9ecef;
+            padding: 16px 20px;
+        }
+
+        #passwordModal .modal-header .modal-title {
+            color: #2c5aa0;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        #passwordModal .modal-body {
+            padding: 20px;
+        }
+
+        #passwordModal .modal-footer {
+            border-top: 1px solid #e9ecef;
+            padding: 15px 20px;
+        }
+
+        .modal-backdrop {
+            z-index: 1060 !important;
+        }
     </style>
 
     <div class="main-content">
         <div class="header-section">
-            <h1>Edit User</h1>
+            <h1>{{ $pageHeading }}</h1>
         </div>
 
         @if(session('success'))
@@ -153,7 +203,7 @@
         @endif
 
         <div class="form-container">
-            <form action="{{ route('admin.users.update', $user->id) }}" method="POST">
+            <form action="{{ $updateRoute }}" method="POST">
                 @csrf
                 @method('PUT')
 
@@ -216,8 +266,14 @@
                     </div>
 
                     <div class="form-group full-width">
-                        <label for="address">Address</label>
-                        <input type="text" id="address" name="address" value="{{ old('address', $user->address) }}">
+                        <label for="address">Address *</label>
+<input
+    type="text"
+    id="address"
+    name="address"
+    value="{{ old('address', $user->address) }}"
+    required
+>
                     </div>
 
                     <div class="form-group full-width">
@@ -230,7 +286,7 @@
 
                     <div class="form-group full-width" style="margin-top: 20px; display: flex; gap: 15px;">
                         <button type="submit" class="btn btn-primary">Update User</button>
-                        <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Cancel</a>
+                        <a href="{{ $indexRoute }}" class="btn btn-secondary">Cancel</a>
                     </div>
                 </div>
             </form>
@@ -258,10 +314,11 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form action="{{ route('admin.users.changePassword', $user->id) }}" method="POST" id="confirmPasswordForm" style="display: none;">
+                    <form action="{{ $changePasswordRoute }}" method="POST" id="confirmPasswordForm" style="display: none;">
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="password" id="passwordInput" value="" autocomplete="off">
+                        <input type="hidden" name="password_confirmation" id="passwordConfirmationInput" value="" autocomplete="off">
                         <button type="submit" class="btn btn-primary" id="savePasswordBtn">Confirm & Save</button>
                     </form>
                 </div>
@@ -271,9 +328,24 @@
 
     <script>
         let generatedPasswordValue = '';
+
+        // Immediately relocate modal to document.body to break out of .main stacking context
+        (function() {
+            function moveModalToBody() {
+                const modal = document.getElementById('passwordModal');
+                if (modal && modal.parentElement !== document.body) {
+                    document.body.appendChild(modal);
+                }
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', moveModalToBody);
+            } else {
+                moveModalToBody();
+            }
+        })();
                         
                         function generatePassword() {
-                            const url = '{{ route("admin.users.generatePassword") }}';
+                            const url = '{{ $generatePasswordRoute }}';
                             console.log('Fetching password from:', url);
                             
                             fetch(url, {
@@ -303,6 +375,7 @@
                                         const generatedPasswordEl = document.getElementById('generatedPassword');
                                         const passwordDisplayEl = document.getElementById('passwordDisplay');
                                         const passwordInputEl = document.getElementById('passwordInput');
+                                        const passwordConfirmationInputEl = document.getElementById('passwordConfirmationInput');
                                         const confirmPasswordFormEl = document.getElementById('confirmPasswordForm');
                                         const generatePasswordBtnEl = document.getElementById('generatePasswordBtn');
                                         
@@ -320,6 +393,9 @@
                                             console.log('Password length:', passwordInputEl.value.length);
                                             console.log('Password value (first 3 chars):', passwordInputEl.value.substring(0, 3));
                                             console.log('Generated password value stored:', generatedPasswordValue ? 'Yes' : 'No');
+                                        }
+                                        if (passwordConfirmationInputEl) {
+                                            passwordConfirmationInputEl.value = data.password;
                                         }
                                         if (confirmPasswordFormEl) {
                                             confirmPasswordFormEl.style.display = 'inline-block';
@@ -358,12 +434,19 @@
                                     });
                                     
                                     // CRITICAL: Ensure the password value matches what was generated
+                                    const passwordConfirmationInput = document.getElementById('passwordConfirmationInput');
                                     if (generatedPasswordValue && passwordInput) {
                                         passwordInput.value = generatedPasswordValue;
+                                        if (passwordConfirmationInput) {
+                                            passwordConfirmationInput.value = generatedPasswordValue;
+                                        }
                                         console.log('Setting password from generatedPasswordValue:', passwordInput.value.length);
                                     } else if (!passwordInput.value && generatedPasswordValue) {
                                         // Fallback: if input is empty but we have the value, set it
                                         passwordInput.value = generatedPasswordValue;
+                                        if (passwordConfirmationInput) {
+                                            passwordConfirmationInput.value = generatedPasswordValue;
+                                        }
                                         console.log('Fallback: Setting password from generatedPasswordValue');
                                     }
                                     
@@ -405,15 +488,34 @@
                                 });
                             }
                             
-                            // Reset modal when closed
+                            // Setup modal handling and backdrop cleanliness
                             const passwordModal = document.getElementById('passwordModal');
                             if (passwordModal) {
+                                // Ensure modal is in body on DOM ready
+                                if (passwordModal.parentElement !== document.body) {
+                                    document.body.appendChild(passwordModal);
+                                }
+
+                                // Clean up any stale backdrops before modal opens
+                                passwordModal.addEventListener('show.bs.modal', function () {
+                                    if (passwordModal.parentElement !== document.body) {
+                                        document.body.appendChild(passwordModal);
+                                    }
+                                    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                                });
+
+                                // Reset modal when closed and remove all backdrops
                                 passwordModal.addEventListener('hidden.bs.modal', function () {
+                                    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                                    document.body.classList.remove('modal-open');
+                                    document.body.style.removeProperty('overflow');
+                                    document.body.style.removeProperty('padding-right');
+
                                     const passwordDisplayEl = document.getElementById('passwordDisplay');
                                     const confirmPasswordFormEl = document.getElementById('confirmPasswordForm');
                                     const generatePasswordBtnEl = document.getElementById('generatePasswordBtn');
                                     const saveBtn = document.getElementById('savePasswordBtn');
-                                    
+
                                     if (passwordDisplayEl) {
                                         passwordDisplayEl.style.display = 'none';
                                     }
@@ -421,6 +523,7 @@
                                         confirmPasswordFormEl.style.display = 'none';
                                     }
                                     if (generatePasswordBtnEl) {
+                                        generatePasswordBtnEl.disabled = false;
                                         generatePasswordBtnEl.textContent = 'Generate Password';
                                     }
                                     if (saveBtn) {
@@ -428,6 +531,28 @@
                                         saveBtn.textContent = 'Confirm & Save';
                                     }
                                     generatedPasswordValue = '';
+                                });
+
+                                // Explicit handler for Cancel and Close (X) buttons to guarantee immediate dismissal
+                                passwordModal.querySelectorAll('[data-bs-dismiss="modal"]').forEach(btn => {
+                                    btn.addEventListener('click', function () {
+                                        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                                            const instance = bootstrap.Modal.getInstance(passwordModal);
+                                            if (instance) {
+                                                instance.hide();
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+
+                            // Trigger button check
+                            const triggerBtn = document.querySelector('[data-bs-target="#passwordModal"]');
+                            if (triggerBtn) {
+                                triggerBtn.addEventListener('click', function () {
+                                    if (passwordModal && passwordModal.parentElement !== document.body) {
+                                        document.body.appendChild(passwordModal);
+                                    }
                                 });
                             }
                         });

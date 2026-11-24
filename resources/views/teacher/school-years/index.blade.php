@@ -122,25 +122,6 @@
                                            class="btn btn-sm btn-success">
                                             <i class="fas fa-download"></i> Download
                                         </a>
-                                        @if($isActive && !$isHidden)
-                                            <button type="button" class="btn btn-sm btn-secondary" disabled
-                                                    title="Cannot hide an active school year. Deactivate it first.">
-                                                <i class="fas fa-eye-slash"></i> Hide
-                                            </button>
-                                        @else
-                                            <form action="{{ route('teacher.school-years.toggle-hidden', $schoolYear->school_year) }}" 
-                                                  method="POST" style="display: inline;">
-                                                @csrf
-                                                @if(request('show_hidden'))
-                                                    <input type="hidden" name="show_hidden" value="1">
-                                                @endif
-                                                <button type="submit" class="btn btn-sm {{ $isHidden ? 'btn-warning' : 'btn-dark' }}" 
-                                                        title="{{ $isHidden ? 'Unhide this school year' : 'Hide this school year (when done)' }}">
-                                                    <i class="fas fa-{{ $isHidden ? 'eye' : 'eye-slash' }}"></i> 
-                                                    {{ $isHidden ? 'Unhide' : 'Hide' }}
-                                                </button>
-                                            </form>
-                                        @endif
                                     </div>
                                 </td>
                             </tr>

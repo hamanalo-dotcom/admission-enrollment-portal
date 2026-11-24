@@ -36,17 +36,7 @@ class AdminSubjectController extends Controller
         $gradeLevels = ['Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12'];
         $strands = ['GAS','TVL'];
         
-        // Get all school years for selection
-        $schoolYears = \App\Models\SchoolYear::orderBy('school_year', 'desc')->get();
-        // Also get school years from enrollments that might not be in the table
-        $enrollmentSchoolYears = \App\Models\Enrollment::select('school_year')
-            ->distinct()
-            ->orderBy('school_year', 'desc')
-            ->pluck('school_year');
-        
-        $allSchoolYears = $schoolYears->pluck('school_year')->merge($enrollmentSchoolYears)->unique()->sort()->reverse()->values();
-        
-        return view('admin.subjects.create', compact('gradeLevels','strands', 'allSchoolYears'));
+        return view('admin.subjects.create', compact('gradeLevels','strands'));
     }
 
     public function store(Request $request)
@@ -56,7 +46,6 @@ class AdminSubjectController extends Controller
             'code' => 'nullable|string|max:50|unique:subjects,code',
             'grade_level' => 'nullable|in:Grade 7,Grade 8,Grade 9,Grade 10,Grade 11,Grade 12',
             'strand' => 'nullable|in:GAS,TVL',
-            'school_year' => 'nullable|string|max:20',
             'description' => 'nullable|string|max:2000',
         ]);
 
@@ -79,17 +68,7 @@ class AdminSubjectController extends Controller
         $gradeLevels = ['Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12'];
         $strands = ['GAS','TVL'];
         
-        // Get all school years for selection
-        $schoolYears = \App\Models\SchoolYear::orderBy('school_year', 'desc')->get();
-        // Also get school years from enrollments that might not be in the table
-        $enrollmentSchoolYears = \App\Models\Enrollment::select('school_year')
-            ->distinct()
-            ->orderBy('school_year', 'desc')
-            ->pluck('school_year');
-        
-        $allSchoolYears = $schoolYears->pluck('school_year')->merge($enrollmentSchoolYears)->unique()->sort()->reverse()->values();
-        
-        return view('admin.subjects.edit', compact('subject','gradeLevels','strands', 'allSchoolYears'));
+        return view('admin.subjects.edit', compact('subject','gradeLevels','strands'));
     }
 
     public function update(Request $request, Subject $subject)
@@ -99,7 +78,6 @@ class AdminSubjectController extends Controller
             'code' => 'nullable|string|max:50|unique:subjects,code,' . $subject->id,
             'grade_level' => 'nullable|in:Grade 7,Grade 8,Grade 9,Grade 10,Grade 11,Grade 12',
             'strand' => 'nullable|in:GAS,TVL',
-            'school_year' => 'nullable|string|max:20',
             'description' => 'nullable|string|max:2000',
         ]);
 
@@ -117,10 +95,11 @@ class AdminSubjectController extends Controller
     }
 
     // Delete functionality removed to preserve all data
-    public function destroy(Subject $subject)
+    public function destroy(Request $request, Subject $subject)
     {
         // Data preservation: Delete functionality has been disabled
-        return redirect()->route('admin.subjects.index')
+        $redirectRoute = $request->routeIs('registrar.*') ? 'registrar.subjects.index' : 'admin.subjects.index';
+        return redirect()->route($redirectRoute)
             ->with('error', 'Delete functionality has been disabled to preserve all data.');
     }
 }

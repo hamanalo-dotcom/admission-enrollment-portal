@@ -449,19 +449,16 @@ class AdminSchoolYearController extends Controller
     }
 
     /**
-     * Permanently delete a soft-deleted school year
+     * Permanent deletion of school years is disabled to preserve all historical records.
+     * All school-year records are retained; use restore() to unarchive a soft-deleted record.
      */
     public function forceDelete(Request $request, $schoolYear)
     {
-        $schoolYearRecord = SchoolYear::onlyTrashed()
-            ->where('school_year', $schoolYear)
-            ->firstOrFail();
-
-        $schoolYearRecord->forceDelete();
-
+        // Permanent deletion is intentionally disabled.
+        // No school year record may be permanently destroyed.
         $routeName = $request->routeIs('registrar.*') ? 'registrar.school-years.trashed' : 'admin.school-years.trashed';
 
         return redirect()->route($routeName)
-            ->with('success', 'School year permanently deleted.');
+            ->with('error', 'Permanent deletion of school years is not allowed. All records are preserved for historical purposes.');
     }
 }

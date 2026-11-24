@@ -1,6 +1,12 @@
 @extends('layout.app')
 
 @section('content')
+@php
+    $isRegistrar = request()->routeIs('registrar.*');
+    $indexRoute = $isRegistrar ? route('registrar.teacher-assignments.index') : route('admin.teacher-assignments.index');
+    $updateRoute = $isRegistrar ? route('registrar.teacher-assignments.update', $teacherAssignment->id) : route('admin.teacher-assignments.update', $teacherAssignment->id);
+    $sectionsUrl = $isRegistrar ? route('registrar.teacher-assignments.sections') : route('admin.teacher-assignments.sections');
+@endphp
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -137,7 +143,7 @@
         @endif
 
         <div class="form-container">
-            <form action="{{ route('admin.teacher-assignments.update', $teacherAssignment->id) }}" method="POST" id="assignmentForm">
+            <form action="{{ $updateRoute }}" method="POST" id="assignmentForm">
                 @csrf
                 @method('PUT')
 
@@ -243,7 +249,7 @@
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Update Assignment</button>
-                    <a href="{{ route('admin.teacher-assignments.index') }}" class="btn btn-secondary">Cancel</a>
+                    <a href="{{ $indexRoute }}" class="btn btn-secondary">Cancel</a>
                 </div>
             </form>
         </div>
@@ -313,7 +319,7 @@
             sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
 
             if (gradeLevel) {
-                fetch(`{{ url('/admin/teacher-assignments/sections') }}?grade_level=${gradeLevel}&strand=${strand}&tvl_branch=${encodeURIComponent(document.getElementById('tvl_branch') ? document.getElementById('tvl_branch').value : '')}`)
+                fetch(`{{ $sectionsUrl }}?grade_level=${gradeLevel}&strand=${strand}&tvl_branch=${encodeURIComponent(document.getElementById('tvl_branch') ? document.getElementById('tvl_branch').value : '')}`)
                     .then(response => response.json())
                     .then(data => {
                         data.forEach(section => {

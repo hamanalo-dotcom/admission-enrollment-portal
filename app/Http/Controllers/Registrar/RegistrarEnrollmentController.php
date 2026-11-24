@@ -27,15 +27,18 @@ class RegistrarEnrollmentController extends Controller
             $query = Enrollment::with('admission');
         }
 
-        // Search functionality
+        // Search functionality - grouped so orWhere conditions do not bypass soft-delete or status filters
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('admission', function($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('lrn', 'like', "%{$search}%");
-            })->orWhere('grade_level', 'like', "%{$search}%")
-              ->orWhere('section', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('admission', function ($sub) use ($search) {
+                    $sub->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('lrn', 'like', "%{$search}%");
+                })
+                ->orWhere('grade_level', 'like', "%{$search}%")
+                ->orWhere('section', 'like', "%{$search}%");
+            });
         }
 
         // Filter by status (only for non-deleted)
@@ -58,76 +61,11 @@ class RegistrarEnrollmentController extends Controller
     }
 
     /**
-     * Show form for creating enrollment.
+     * Note: create() and store() have been removed from RegistrarEnrollmentController.
+     * Enrollment applications are submitted by students via StudentEnrollmentController
+     * to ensure accurate student identity. The Registrar reviews, manages, assigns
+     * sections, updates status, and restores enrollment records.
      */
-    public function create()
-    {
-        // Get approved admissions only
-        // $admissions = Admission::where('status', 'approved')->get();
-
-        $admission = Admission::where('user_id', auth()->id())->first();
-        
-        // Get active school year
-        $activeSchoolYear = SchoolYear::where('is_active', true)->first();
-        
-        return view('student.enrollment.create', compact('admission', 'activeSchoolYear'));
-    }
-
-    /**
-     * Store enrollment record.
-     */
-    public function store(Request $request)
-    {
-        // ✅ Validate input
-        $validated = $request->validate([
-            'admission_id'     => 'required|exists:admissions,id',
-            'grade_level'      => 'required|string|max:50',
-            'strand'           => 'nullable|string|max:100',
-            'section'          => 'nullable|string|max:100',
-            'school_year'      => 'nullable|string|max:20', // Made nullable to allow default
-            'semester'         => 'nullable|string|max:20',
-            'guardian_name'    => 'nullable|string|max:255',
-            'guardian_contact' => 'nullable|string|max:50',
-        ]);
-
-        // Set default school year to active school year if not provided
-        if (empty($validated['school_year'])) {
-            $activeSchoolYear = SchoolYear::where('is_active', true)->first();
-            if ($activeSchoolYear) {
-                $validated['school_year'] = $activeSchoolYear->school_year;
-            } else {
-                return back()->withErrors(['school_year' => 'No active school year found. Please set an active school year first.'])->withInput();
-            }
-        }
-
-        // ✅ Find Admission (auto 404 if not found)
-        $admission = Admission::findOrFail($validated['admission_id']);
-
-        // Ensure strand is empty for Grade 7-10
-        $gradeLevel = $validated['grade_level'] ?? null;
-        if ($gradeLevel && in_array($gradeLevel, ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'])) {
-            $validated['strand'] = null;
-            $validated['tvl_branch'] = null;
-        }
-
-        // ✅ Create Enrollment
-        $enrollment = Enrollment::create([
-            'admission_id'     => $admission->id,
-            'user_id'          => Auth::id(), // current logged in user
-            'grade_level'      => $validated['grade_level'],
-            'strand'           => $validated['strand'] ?? null,
-            'section'          => $validated['section'] ?? null,
-            'school_year'      => $validated['school_year'],
-            'semester'         => $validated['semester'] ?? null,
-            'guardian_name'    => $validated['guardian_name'] ?? $admission->guardian_name,
-            'guardian_contact' => $validated['guardian_contact'] ?? $admission->guardian_contact,
-            'status'           => 'pending', // default status
-        ]);
-
-        // ✅ Redirect with success message
-        return redirect()->route('student.enrollment.index')
-            ->with('success', 'Enrollment submitted successfully!');
-    }
 
 
     /**
@@ -200,18 +138,43 @@ class RegistrarEnrollmentController extends Controller
         ]);
 
         // Find configured capacity for this section and grade/strand if exists
-        $sectionCfg = Section::where('name', $validated['section'])
-            ->where(function ($q) use ($enrollment) {
-                $q->whereNull('strand')->orWhere('strand', $enrollment->strand);
-            })
-            ->where('grade_level', $enrollment->grade_level)
-            ->first();
+        $sectionQuery = Section::where('name', $validated['section'])
+            ->where('grade_level', $enrollment->grade_level);
+
+        if (!empty($enrollment->strand)) {
+            $sectionQuery->where(function ($q) use ($enrollment) {
+                $q->where('strand', $enrollment->strand)->orWhereNull('strand');
+            });
+        } else {
+            $sectionQuery->whereNull('strand');
+        }
+
+        $sectionCfg = $sectionQuery->orderByRaw('CASE WHEN strand IS NOT NULL THEN 0 ELSE 1 END')->first();
 
         if ($sectionCfg) {
-            $currentCount = Enrollment::where('grade_level', $enrollment->grade_level)
+            $countQuery = Enrollment::where('grade_level', $enrollment->grade_level)
                 ->where('section', $validated['section'])
-                ->whereIn('status', ['pending', 'enrolled'])
-                ->count();
+                ->whereIn('status', ['pending', 'enrolled']);
+
+            // Appropriate school year
+            if (!empty($enrollment->school_year)) {
+                $countQuery->where('school_year', $enrollment->school_year);
+            }
+
+            // Appropriate strand where applicable
+            if (!empty($enrollment->strand)) {
+                $countQuery->where('strand', $enrollment->strand);
+            }
+
+            // Appropriate TVL branch where applicable
+            if (!empty($enrollment->tvl_branch)) {
+                $countQuery->where('tvl_branch', $enrollment->tvl_branch);
+            }
+
+            // Exclude current enrollment so re-assigning same section does not count student against capacity
+            $countQuery->where('id', '!=', $enrollment->id);
+
+            $currentCount = $countQuery->count();
 
             if ($currentCount >= $sectionCfg->capacity) {
                 return back()->withErrors(['section' => 'Section is full (capacity '.$sectionCfg->capacity.').']);

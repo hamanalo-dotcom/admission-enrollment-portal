@@ -1,6 +1,11 @@
 @extends('layout.app')
 
 @section('content')
+@php
+    $isRegistrar = request()->routeIs('registrar.*');
+    $indexRoute = $isRegistrar ? route('registrar.teacher-assignments.index') : route('admin.teacher-assignments.index');
+    $createRoute = $isRegistrar ? route('registrar.teacher-assignments.create') : route('admin.teacher-assignments.create');
+@endphp
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -184,7 +189,7 @@
                 <h1>👨‍🏫 Teacher Assignments</h1>
             </div>
             <div class="header-actions">
-                <a href="{{ route('admin.teacher-assignments.create') }}" class="btn btn-primary">
+                <a href="{{ $createRoute }}" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Assign Teacher
                 </a>
             </div>
@@ -198,7 +203,7 @@
 
         <!-- Search and Filter Section -->
         <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); margin-bottom: 20px;">
-            <form method="GET" action="{{ route('admin.teacher-assignments.index') }}" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+            <form method="GET" action="{{ $indexRoute }}" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                 <input type="text" name="search" class="search-box" placeholder="Search by teacher name or email..." value="{{ request('search') }}" style="flex: 1; min-width: 250px;">
                 <select name="grade_level" class="select-filter" style="min-width: 150px;">
                     <option value="">All Grades</option>
@@ -225,7 +230,7 @@
                     <i class="fas fa-search"></i> Search
                 </button>
                 @if(request('search') || request('grade_level') || request('school_year') || request('strand'))
-                    <a href="{{ route('admin.teacher-assignments.index') }}" class="btn" style="background: #f5f7fa; color: #666; border: 2px solid #d4e5f3;">
+                    <a href="{{ $indexRoute }}" class="btn" style="background: #f5f7fa; color: #666; border: 2px solid #d4e5f3;">
                         <i class="fas fa-times"></i> Clear
                     </a>
                 @endif
@@ -294,7 +299,7 @@
                                 <td>{{ $assignment->school_year }}</td>
                                 <td>
                                     <div style="display: flex; gap: 10px;">
-                                        <a href="{{ route('admin.teacher-assignments.edit', $assignment->id) }}" class="btn-icon" title="Edit">
+                                        <a href="{{ $isRegistrar ? route('registrar.teacher-assignments.edit', $assignment->id) : route('admin.teacher-assignments.edit', $assignment->id) }}" class="btn-icon" title="Edit">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
                                         {{-- Delete functionality removed to preserve all data --}}

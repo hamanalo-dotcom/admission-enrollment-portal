@@ -35,7 +35,7 @@
             @php
                 $selectedSchoolYear = request('school_year', $currentSchoolYear);
             @endphp
-            <form method="GET" action="{{ route('admin.grades.index') }}" class="filters">
+            <form method="GET" action="{{ route('registrar.grades.index') }}" class="filters">
                 <div>
                     <label>Search Student</label>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Name or email">
@@ -87,7 +87,7 @@
                 </div>
                 <div style="grid-column: 1 / -1; display:flex; gap:8px; justify-content:flex-end;">
                     <button class="btn-primary" type="submit">Filter</button>
-                    <a class="btn-secondary" href="{{ route('admin.grades.index') }}">Reset</a>
+                    <a class="btn-secondary" href="{{ route('registrar.grades.index') }}">Reset</a>
                 </div>
             </form>
 
@@ -111,8 +111,8 @@
                             <tr>
                                 <td>
                                     @php
-                                        $routeName = request()->routeIs('registrar.*') ? 'registrar.grades.student-record' : 'admin.grades.student-record';
-                                    @endphp
+                                     $routeName = 'registrar.grades.student-record';
+                                        @endphp
                                     <strong>
                                         <a href="{{ route($routeName, $grade->student->id) }}" 
                                            style="color: #2c5aa0; text-decoration: none; cursor: pointer;"
@@ -144,7 +144,7 @@
                                 <td>{{ $grade->school_year }}</td>
                                 <td>
                                     <div class="actions">
-                                        <a class="btn-secondary" href="{{ route('admin.grades.edit', $grade->id) }}">Edit</a>
+                                       <a class="btn-secondary" href="{{ route('registrar.grades.edit', $grade->id) }}">Edit</a> 
                                         {{-- Delete functionality removed to preserve all data --}}
                                     </div>
                                 </td>

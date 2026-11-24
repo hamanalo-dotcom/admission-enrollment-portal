@@ -12,9 +12,22 @@ use App\Models\Section;
 use App\Models\SchoolYear;
 use App\Models\TeacherSectionAssignment;
 use Illuminate\Http\Request;
+use App\Http\Middleware\Registrar as RegistrarMiddleware;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class AdminReportController extends Controller
+class AdminReportController extends Controller implements HasMiddleware
 {
+    /**
+     * Get the middleware that should be assigned to the controller.
+     */
+    public static function middleware(): array
+    {
+        return [
+            new Middleware(RegistrarMiddleware::class),
+        ];
+    }
+
     /**
      * Display the reports dashboard with comprehensive lists
      */

@@ -162,7 +162,20 @@ class StudentEnrollmentController extends Controller
             }
         }
 
-        $admission = Admission::findOrFail($validated['admission_id']);
+        // Ensure the submitted admission belongs to the currently authenticated student
+        $admission = Admission::where('id', $validated['admission_id'])
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$admission) {
+            abort(403, 'Unauthorized action. This admission record does not belong to you.');
+        }
+
+        // Ensure the admission is approved before creating an enrollment
+        if ($admission->status !== 'approved') {
+            return redirect()->route('student.admissions.index')
+                ->with('error', 'Your admission must be approved before you can enroll.');
+        }
 
         // Check if student already has enrollment for this school year
         $existingEnrollment = Enrollment::where('user_id', Auth::id())
@@ -173,12 +186,6 @@ class StudentEnrollmentController extends Controller
         if ($existingEnrollment) {
             return redirect()->route('student.enrollment.edit', $existingEnrollment->id)
                 ->with('error', 'You already have an enrollment for ' . $validated['school_year'] . '. Please edit your existing enrollment instead.');
-        }
-
-        // Block enrollment if admission is not approved
-        if ($admission->status !== 'approved') {
-            return redirect()->route('student.admissions.index')
-                ->with('error', 'Your admission must be approved before you can enroll.');
         }
 
         // Update admission's student_type if changed
@@ -321,6 +328,8 @@ class StudentEnrollmentController extends Controller
      */
     public function show(Enrollment $enrollment)
     {
+        $this->authorize('view', $enrollment);
+
         $admission = $enrollment->admission;
         
         // Block access if admission is not approved

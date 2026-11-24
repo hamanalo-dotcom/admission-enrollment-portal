@@ -65,11 +65,11 @@
         <!-- Students Tab -->
         <div id="students" class="tab-content active">
             <h2 style="color: #2c5aa0; margin-bottom: 20px;">List of Students</h2>
-            <form method="GET" action="{{ route('admin.reports.index') }}" class="search-filter">
+            <form method="GET" action="{{ route('registrar.reports.index') }}" class="search-filter">
                 <input type="hidden" name="tab" value="students">
                 <input type="text" name="student_search" value="{{ request('student_search') }}" placeholder="Search by name or email...">
                 <button type="submit" class="btn-filter">Search</button>
-                <a href="{{ route('admin.reports.index', ['tab' => 'students']) }}" class="btn-filter" style="text-decoration: none; background: #6c757d;">Reset</a>
+                <a href="{{ route('registrar.reports.index', ['tab' => 'students']) }}" class="btn-filter" style="text-decoration: none; background: #6c757d;">Reset</a>
             </form>
             <div class="table-container">
                 <table>
@@ -101,7 +101,7 @@
         <!-- Sections Tab -->
         <div id="sections" class="tab-content">
             <h2 style="color: #2c5aa0; margin-bottom: 20px;">List of Sections</h2>
-            <form method="GET" action="{{ route('admin.reports.index') }}" class="search-filter">
+            <form method="GET" action="{{ route('registrar.reports.index') }}" class="search-filter">
                 <input type="hidden" name="tab" value="sections">
                 <select name="section_grade_level">
                     <option value="">All Grade Levels</option>
@@ -110,7 +110,7 @@
                     @endforeach
                 </select>
                 <button type="submit" class="btn-filter">Filter</button>
-                <a href="{{ route('admin.reports.index', ['tab' => 'sections']) }}" class="btn-filter" style="text-decoration: none; background: #6c757d;">Reset</a>
+                <a href="{{ route('registrar.reports.index', ['tab' => 'sections']) }}" class="btn-filter" style="text-decoration: none; background: #6c757d;">Reset</a>
             </form>
             <div class="table-container">
                 <table>
@@ -178,11 +178,11 @@
         <!-- Instructors Tab -->
         <div id="instructors" class="tab-content">
             <h2 style="color: #2c5aa0; margin-bottom: 20px;">List of Instructors (Teachers)</h2>
-            <form method="GET" action="{{ route('admin.reports.index') }}" class="search-filter">
+            <form method="GET" action="{{ route('registrar.reports.index') }}" class="search-filter">
                 <input type="hidden" name="tab" value="instructors">
                 <input type="text" name="instructor_search" value="{{ request('instructor_search') }}" placeholder="Search by name or email...">
                 <button type="submit" class="btn-filter">Search</button>
-                <a href="{{ route('admin.reports.index', ['tab' => 'instructors']) }}" class="btn-filter" style="text-decoration: none; background: #6c757d;">Reset</a>
+                <a href="{{ route('registrar.reports.index', ['tab' => 'instructors']) }}" class="btn-filter" style="text-decoration: none; background: #6c757d;">Reset</a>
             </form>
             <div class="table-container">
                 <table>
@@ -214,7 +214,7 @@
         <!-- Subjects Tab -->
         <div id="subjects" class="tab-content">
             <h2 style="color: #2c5aa0; margin-bottom: 20px;">List of Subjects</h2>
-            <form method="GET" action="{{ route('admin.reports.index') }}" class="search-filter">
+            <form method="GET" action="{{ route('registrar.reports.index') }}" class="search-filter">
                 <input type="hidden" name="tab" value="subjects">
                 <select name="subject_grade_level">
                     <option value="">All Grade Levels</option>
@@ -229,7 +229,7 @@
                     @endforeach
                 </select>
                 <button type="submit" class="btn-filter">Filter</button>
-                <a href="{{ route('admin.reports.index', ['tab' => 'subjects']) }}" class="btn-filter" style="text-decoration: none; background: #6c757d;">Reset</a>
+                <a href="{{ route('registrar.reports.index', ['tab' => 'subjects']) }}" class="btn-filter" style="text-decoration: none; background: #6c757d;">Reset</a>
             </form>
             <div class="table-container">
                 <table>
@@ -273,7 +273,7 @@
                     </div>
                     <h3>Enrollment Report</h3>
                     <p>View detailed enrollment information by grade level, section, status, and school year.</p>
-                    <a href="{{ route('admin.reports.enrollment') }}" class="btn-report">View Report</a>
+                    <a href="{{ route('registrar.reports.enrollment') }}" class="btn-report">View Report</a>
                 </div>
 
                 <div class="report-card">
@@ -282,7 +282,7 @@
                     </div>
                     <h3>Admission Report</h3>
                     <p>Generate reports on student admissions with status, date range, and year level filters.</p>
-                    <a href="{{ route('admin.reports.admission') }}" class="btn-report">View Report</a>
+                    <a href="{{ route('registrar.reports.admission') }}" class="btn-report">View Report</a>
                 </div>
 
                 <div class="report-card">
@@ -291,7 +291,7 @@
                     </div>
                     <h3>Grade Report</h3>
                     <p>View student grades by subject, grading period, section, and school year with summary statistics.</p>
-                    <a href="{{ route('admin.reports.grade') }}" class="btn-report">View Report</a>
+                    <a href="{{ route('registrar.reports.grade') }}" class="btn-report">View Report</a>
                 </div>
 
                 <div class="report-card">
@@ -300,7 +300,7 @@
                     </div>
                     <h3>Teacher Assignment Report</h3>
                     <p>View all teacher assignments by grade level, section, subject, and school year.</p>
-                    <a href="{{ route('admin.reports.teacherAssignment') }}" class="btn-report">View Report</a>
+                    <a href="{{ route('registrar.reports.teacherAssignment') }}" class="btn-report">View Report</a>
                 </div>
 
                 <div class="report-card">
@@ -309,7 +309,7 @@
                     </div>
                     <h3>Statistics Report</h3>
                     <p>View overall statistics including student counts, enrollment breakdowns, and admission status.</p>
-                    <a href="{{ route('admin.reports.statistics') }}" class="btn-report">View Report</a>
+                    <a href="{{ route('registrar.reports.statistics') }}" class="btn-report">View Report</a>
                 </div>
             </div>
         </div>

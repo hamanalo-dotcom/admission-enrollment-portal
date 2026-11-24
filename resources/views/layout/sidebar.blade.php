@@ -1,66 +1,51 @@
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
     .sidenav {
         width: 250px;
-        background: linear-gradient(135deg, #2c5aa0 0%, #526c86 100%);
-        color: white;
-        padding: 30px 0;
+        background: linear-gradient(180deg, var(--ds-primary) 0%, var(--ds-secondary) 100%);
+        color: #fff;
+        padding: 0;
         position: fixed;
         height: 100vh;
         overflow-y: auto;
-        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
-        font-family: 'Poppins', sans-serif;
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+        font-family: var(--ds-font-family);
         display: flex;
         flex-direction: column;
-        z-index: 1000;
+        z-index: var(--ds-z-sidebar);
         left: 0;
         top: 0;
     }
 
-    .sidenav::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .sidenav::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    .sidenav::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 3px;
-    }
+    .sidenav::-webkit-scrollbar { width: 5px; }
+    .sidenav::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+    .sidenav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
 
     .close-btn {
         display: none !important;
         background: none;
         border: none;
-        color: white;
-        font-size: 24px;
+        color: #fff;
+        font-size: 22px;
         cursor: pointer;
         float: right;
         margin-right: 15px;
         margin-top: 10px;
     }
 
-    /* Sidebar overlay - completely disabled on desktop */
+    /* Sidebar overlay - disabled on desktop */
     .sidebar-overlay {
         display: none !important;
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        top: 0; left: 0; right: 0; bottom: 0;
         background: rgba(0, 0, 0, 0.5);
-        z-index: 998;
+        z-index: calc(var(--ds-z-sidebar) - 2);
         pointer-events: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
         width: 0 !important;
         height: 0 !important;
     }
-    
-    /* Only enable overlay on mobile when active */
+
     @media (max-width: 768px) {
         .sidebar-overlay {
             width: 100% !important;
@@ -68,7 +53,6 @@
             visibility: visible;
             opacity: 1;
         }
-        
         .sidebar-overlay.active {
             display: block !important;
             pointer-events: auto !important;
@@ -79,288 +63,201 @@
 
     /* Logo Section (Admin/Registrar) */
     .logo-section {
-        padding: 20px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 24px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.15);
         text-align: center;
         margin-bottom: 0;
     }
-
     .logo-section img {
-        width: 80px;
-        height: 80px;
+        width: 72px; height: 72px;
         margin-bottom: 10px;
         border-radius: 50%;
         object-fit: cover;
+        border: 3px solid rgba(255,255,255,0.25);
     }
-
     .logo-section h1 {
-        font-size: 18px;
-        font-weight: 700;
-        margin: 0;
-        color: white;
+        font-size: 17px; font-weight: 700;
+        margin: 0; color: #fff;
     }
-
     .logo-section p {
-        font-size: 12px;
-        margin-top: 5px;
-        opacity: 0.8;
-        color: rgba(255, 255, 255, 0.8);
+        font-size: 11px; margin-top: 4px;
+        color: rgba(255,255,255,0.7);
     }
 
     /* User Profile Section (Student/Teacher) */
     .user-profile-section {
-        padding: 20px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 24px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.15);
         text-align: center;
         margin-bottom: 0;
     }
-
     .user-profile-section .avatar {
-        width: 80px;
-        height: 80px;
+        width: 72px; height: 72px;
         border-radius: 50%;
-        border: 4px solid rgba(255, 255, 255, 0.3);
-        margin: 0 auto 15px auto;
-        background: linear-gradient(135deg, #4a8fd8 0%, #7fb3ed 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 32px;
-        font-weight: 700;
+        border: 3px solid rgba(255,255,255,0.25);
+        margin: 0 auto 12px auto;
+        background: linear-gradient(135deg, var(--ds-accent) 0%, var(--ds-accent-light) 100%);
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 28px; font-weight: 700;
     }
-
     .user-profile-section .user-name {
-        font-size: 16px;
-        font-weight: 700;
-        margin: 0 0 5px 0;
-        color: white;
+        font-size: 15px; font-weight: 700;
+        margin: 0 0 4px 0; color: #fff;
     }
-
     .user-profile-section .user-mail {
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.7);
+        font-size: 11px;
+        color: rgba(255,255,255,0.65);
         margin: 0;
     }
-
 
     /* Navigation Menu */
-    .nav-container {
-        flex: 1;
-        padding: 20px 0;
-        overflow-y: auto;
-    }
-
-    .dropdownSmsprofile {
-        margin: 0;
-    }
+    .nav-container { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .dropdownSmsprofile { margin: 0; }
 
     .dropdown-a {
-        display: block;
-        padding: 14px 20px;
-        color: rgba(255, 255, 255, 0.8);
+        display: flex; align-items: center;
+        padding: 12px 20px;
+        color: rgba(255,255,255,0.8);
         text-decoration: none;
-        transition: all 0.3s ease;
-        border-left: 4px solid transparent;
-        font-size: 14px;
-        font-weight: 500;
+        transition: var(--ds-transition);
+        border-left: 3px solid transparent;
+        font-size: 13.5px; font-weight: 500;
     }
-
     .dropdown-a:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: white;
-        border-left-color: #4a8fd8;
-        padding-left: 16px;
+        background: rgba(255,255,255,0.08);
+        color: #fff;
+        border-left-color: var(--ds-accent-light);
     }
-
     .dropdown-a.active {
-        background-color: rgba(74, 143, 216, 0.2);
-        color: #4a8fd8;
-        border-left-color: #4a8fd8;
+        background: rgba(255,255,255,0.12);
+        color: var(--ds-accent-light);
+        border-left-color: var(--ds-accent-light);
     }
-
-    .dropdown-a i {
-        margin-right: 12px;
-        width: 18px;
-        text-align: center;
-    }
+    .dropdown-a i { margin-right: 12px; width: 18px; text-align: center; }
 
     /* Dropdown Button */
     .dropdown-btn {
         width: 100%;
-        padding: 14px 20px;
-        background-color: transparent;
+        padding: 12px 20px;
+        background: transparent;
         border: none;
-        border-left: 4px solid transparent;
-        color: rgba(255, 255, 255, 0.8);
-        cursor: pointer;
-        text-align: left;
-        transition: all 0.3s ease;
-        font-size: 15px;
-        font-weight: 500;
-        font-family: 'Poppins', sans-serif;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        box-sizing: border-box;
+        border-left: 3px solid transparent;
+        color: rgba(255,255,255,0.8);
+        cursor: pointer; text-align: left;
+        transition: var(--ds-transition);
+        font-size: 13.5px; font-weight: 500;
+        font-family: var(--ds-font-family);
+        display: flex; align-items: center; justify-content: space-between;
     }
-    
-    .dropdown-btn span {
-        flex: 1;
-    }
-
+    .dropdown-btn span { flex: 1; }
     .dropdown-btn:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: white;
-        border-left-color: #4a8fd8;
+        background: rgba(255,255,255,0.08);
+        color: #fff;
+        border-left-color: var(--ds-accent-light);
     }
-
-    .dropdown-btn:focus {
-        outline: none;
-    }
-
+    .dropdown-btn:focus { outline: none; }
     .dropdown-btn.active {
-        background-color: rgba(74, 143, 216, 0.2);
-        color: #4a8fd8;
-        border-left-color: #4a8fd8;
+        background: rgba(255,255,255,0.12);
+        color: var(--ds-accent-light);
+        border-left-color: var(--ds-accent-light);
     }
-
     .dropdown-btn i.fa-caret-down {
         margin-left: auto;
-        transition: transform 0.3s ease;
+        transition: transform 0.25s ease;
         font-size: 12px;
     }
-
-    .dropdown-btn.active i.fa-caret-down {
-        transform: rotate(180deg);
-    }
+    .dropdown-btn.active i.fa-caret-down { transform: rotate(180deg); }
 
     /* Dropdown Container */
     .dropdown-container {
-        max-height: 0;
-        overflow: hidden;
+        max-height: 0; overflow: hidden;
         transition: max-height 0.3s ease;
-        background-color: rgba(0, 0, 0, 0.1);
+        background: rgba(0,0,0,0.12);
     }
-
-    .dropdown-container.show {
-        max-height: 500px;
-    }
-
+    .dropdown-container.show { max-height: 500px; }
     .dropdown-container .dropdown-a {
-        padding-left: 50px;
-        font-size: 13px;
-        color: rgba(255, 255, 255, 0.6);
+        padding-left: 48px;
+        font-size: 12.5px;
+        color: rgba(255,255,255,0.6);
     }
-
     .dropdown-container .dropdown-a:hover {
-        color: rgba(255, 255, 255, 0.9);
-        padding-left: 46px;
+        color: rgba(255,255,255,0.95);
+        padding-left: 44px;
     }
 
     /* Submenu Styles */
-    .dropdown-submenu {
-        position: relative;
-    }
-
+    .dropdown-submenu { position: relative; }
     .dropdown-submenu-btn {
-        width: 100%;
-        text-align: left;
-        background: none;
-        border: none;
+        width: 100%; text-align: left;
+        background: none; border: none;
         cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        display: flex; justify-content: space-between; align-items: center;
     }
-
     .dropdown-submenu-btn i {
         margin-left: auto;
-        transition: transform 0.3s ease;
+        transition: transform 0.25s ease;
     }
-
-    .dropdown-submenu-btn.active i {
-        transform: rotate(90deg);
-    }
+    .dropdown-submenu-btn.active i { transform: rotate(90deg); }
 
     .dropdown-submenu-container {
-        max-height: 0;
-        overflow: hidden;
+        max-height: 0; overflow: hidden;
         transition: max-height 0.3s ease;
-        background-color: rgba(0, 0, 0, 0.15);
+        background: rgba(0,0,0,0.15);
     }
-
-    .dropdown-submenu-container.show {
-        max-height: 300px;
-    }
-
-    .dropdown-submenu-container .dropdown-a {
-        padding-left: 70px;
-        font-size: 12px;
-    }
-
-    .dropdown-submenu-container .dropdown-a:hover {
-        padding-left: 66px;
-    }
+    .dropdown-submenu-container.show { max-height: 300px; }
+    .dropdown-submenu-container .dropdown-a { padding-left: 68px; font-size: 12px; }
+    .dropdown-submenu-container .dropdown-a:hover { padding-left: 64px; }
 
     /* Logout Button */
     .logout-section {
-        padding: 20px;
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 16px 20px;
+        border-top: 1px solid rgba(255,255,255,0.15);
     }
-
     .logout-btn {
         display: block;
-        padding: 12px 20px;
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
+        padding: 10px 20px;
+        background: rgba(255,255,255,0.08);
+        color: #fff;
         text-decoration: none;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: var(--ds-radius-sm);
         text-align: center;
         font-weight: 600;
-        transition: all 0.3s ease;
+        transition: var(--ds-transition);
         cursor: pointer;
-        font-family: 'Poppins', sans-serif;
+        font-family: var(--ds-font-family);
         width: 100%;
+        font-size: 13px;
     }
-
     .logout-btn:hover {
-        background: rgba(255, 50, 50, 0.2);
-        border-color: rgba(255, 50, 50, 0.5);
-        color: #ff9999;
+        background: rgba(229, 62, 62, 0.2);
+        border-color: rgba(229, 62, 62, 0.4);
+        color: #feb2b2;
     }
 
     @media (max-width: 768px) {
         .sidenav {
             width: 250px;
             transform: translateX(-100%);
-            z-index: 1000;
+            z-index: var(--ds-z-sidebar);
             transition: transform 0.3s ease;
         }
-
-        .sidenav.active {
-            transform: translateX(0);
-        }
+        .sidenav.active { transform: translateX(0); }
 
         .close-btn {
             display: block !important;
             position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.2);
+            top: 12px; right: 12px;
+            background: rgba(255,255,255,0.15);
             border: none;
-            color: white;
-            font-size: 24px;
+            color: #fff;
+            font-size: 22px;
             cursor: pointer;
-            padding: 5px 10px;
-            border-radius: 4px;
-            z-index: 1001;
+            padding: 4px 10px;
+            border-radius: var(--ds-radius-sm);
+            z-index: calc(var(--ds-z-sidebar) + 1);
         }
-
-        .close-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
+        .close-btn:hover { background: rgba(255,255,255,0.25); }
     }
 </style>
 
@@ -411,62 +308,6 @@
     <!-- Navigation Menu -->
     <div class="nav-container">
         @if ($role === 'admin')
-            @php
-                // Get all unique school years from enrollments
-                $adminSchoolYears = \App\Models\Enrollment::select('school_year')
-                    ->distinct()
-                    ->orderBy('school_year', 'desc')
-                    ->pluck('school_year')
-                    ->toArray();
-                
-                // Also get school years from school_years table that might not have enrollments yet
-                $schoolYearsFromTable = \App\Models\SchoolYear::select('school_year')
-                    ->orderBy('school_year', 'desc')
-                    ->pluck('school_year')
-                    ->toArray();
-                
-                // Merge both arrays and get unique values
-                $allAdminSchoolYears = array_unique(array_merge($adminSchoolYears, $schoolYearsFromTable));
-                rsort($allAdminSchoolYears); // Sort descending
-                
-                // Group JHS and SHS grades by school year
-                $adminJhsBySchoolYear = [];
-                $adminShsBySchoolYear = [];
-                
-                foreach($allAdminSchoolYears as $schoolYear) {
-                    $jhsGrades = \App\Models\Enrollment::where('school_year', $schoolYear)
-                        ->whereIn('grade_level', ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'])
-                        ->distinct()
-                        ->pluck('grade_level')
-                        ->toArray();
-                    
-                    $shsGrades = \App\Models\Enrollment::where('school_year', $schoolYear)
-                        ->whereIn('grade_level', ['Grade 11', 'Grade 12'])
-                        ->distinct()
-                        ->pluck('grade_level')
-                        ->toArray();
-                    
-                    // Show school year if it has any grades OR if it exists in school_years table
-                    $schoolYearExists = in_array($schoolYear, $schoolYearsFromTable);
-                    
-                    // If school year exists in school_years table, show all grade levels
-                    // Otherwise, only show grade levels that have enrollments
-                    if ($schoolYearExists) {
-                        // Show all JHS grades if school year exists in table
-                        $adminJhsBySchoolYear[$schoolYear] = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'];
-                        // Show all SHS grades if school year exists in table
-                        $adminShsBySchoolYear[$schoolYear] = ['Grade 11', 'Grade 12'];
-                    } else {
-                        // Only show grade levels that have enrollments
-                        if (!empty($jhsGrades)) {
-                            $adminJhsBySchoolYear[$schoolYear] = $jhsGrades;
-                        }
-                        if (!empty($shsGrades)) {
-                            $adminShsBySchoolYear[$schoolYear] = $shsGrades;
-                        }
-                    }
-                }
-            @endphp
             <div class="dropdownSmsprofile">
                 <a class="dropdown-a" href="{{ route('admin.index') }}">
                     <i class="fas fa-th-large"></i> Dashboard
@@ -475,11 +316,6 @@
             <div class="dropdownSmsprofile">
                 <a class="dropdown-a" href="{{ route('admin.users.index') }}">
                     <i class="fas fa-users"></i> Users
-                </a>
-            </div>
-            <div class="dropdownSmsprofile">
-                <a class="dropdown-a" href="{{ route('admin.reports.index') }}">
-<i class="fas fa-chart-bar"></i> Reports
                 </a>
             </div>
 
@@ -508,8 +344,13 @@
                 </a>
             </div>
             <div class="dropdownSmsprofile">
-                <a class="dropdown-a" href="{{ route('registrar.teachers.index') }}">
-                    <i class="fas fa-chalkboard-teacher"></i> Teachers
+                <a class="dropdown-a" href="{{ route('registrar.events.index') }}">
+                    <i class="fas fa-bullhorn"></i> Announcements
+                </a>
+            </div>
+            <div class="dropdownSmsprofile">
+                <a class="dropdown-a" href="{{ route('registrar.reports.index') }}">
+                    <i class="fas fa-chart-bar"></i> Reports
                 </a>
             </div>
             <div class="dropdownSmsprofile">

@@ -38,7 +38,7 @@
         @endif
 
         <div class="table-section">
-            <form method="GET" action="{{ route('admin.subjects.index') }}" class="filters">
+            <form method="GET" action="{{ request()->routeIs('registrar.*') ? route('registrar.subjects.index') : route('admin.subjects.index') }}" class="filters">
                 <div>
                     <label>Search</label>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Name or code">
@@ -63,7 +63,7 @@
                 </div>
                 <div style="align-self:end; display:flex; gap:8px;">
                     <button class="btn-primary" type="submit">Filter</button>
-                    <a class="btn-secondary" href="{{ route('admin.subjects.index') }}">Reset</a>
+                    <a class="btn-secondary" href="{{ request()->routeIs('registrar.*') ? route('registrar.subjects.index') : route('admin.subjects.index') }}">Reset</a>
                 </div>
             </form>
 

@@ -26,7 +26,7 @@
             <p class="muted">Overview of students, enrollments and admissions. Select a school year to filter enrollment totals.</p>
         </div>
 
-        <form method="GET" action="{{ route('admin.reports.statistics') }}" class="form-inline">
+        <form method="GET" action="{{ route('registrar.reports.statistics') }}" class="form-inline">
             <label for="school_year" style="font-weight:600;color:#2c5aa0;">School Year</label>
             <select name="school_year" id="school_year" class="form-select">
                 <option value="">All years</option>
@@ -38,7 +38,7 @@
             </select>
             <button type="submit" class="btn">Apply</button>
             @if(request('school_year'))
-                <a href="{{ route('admin.reports.statistics') }}" class="btn btn-clear" style="margin-left:8px;">Clear</a>
+                <a href="{{ route('registrar.reports.statistics') }}" class="btn btn-clear" style="margin-left:8px;">Clear</a>
             @endif
         </form>
 
@@ -56,7 +56,7 @@
             @if(!empty($selectedSchoolYear))
                 <div class="card">
                     <h3>
-                        <a href="{{ route('admin.reports.enrollment', ['school_year' => $selectedSchoolYear]) }}" class="link-reset">
+                        <a href="{{ route('registrar.reports.enrollment', ['school_year' => $selectedSchoolYear]) }}" class="link-reset">
                             {{ $totalEnrolled ?? 0 }}
                         </a>
                     </h3>

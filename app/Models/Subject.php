@@ -14,7 +14,6 @@ class Subject extends Model
         'code',
         'grade_level',
         'strand',
-        'school_year',
         'description',
     ];
 

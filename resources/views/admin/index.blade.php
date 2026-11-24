@@ -53,6 +53,32 @@
         border-left-color: #f44336;
     }
 
+    .kpi-card.users-total {
+        border-left-color: #1e3a8a;
+    }
+
+    .kpi-card.users-students {
+        border-left-color: #0d9488;
+    }
+
+    .kpi-card.users-teachers {
+        border-left-color: #6366f1;
+    }
+
+    .kpi-card.users-admins {
+        border-left-color: #8b5cf6;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #334155;
+        margin: 0 0 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
     .kpi-card h3 {
         font-size: 14px;
         color: #666;
@@ -79,6 +105,22 @@
 
     .kpi-card.rejected .value {
         color: #f44336;
+    }
+
+    .kpi-card.users-total .value {
+        color: #1e3a8a;
+    }
+
+    .kpi-card.users-students .value {
+        color: #0d9488;
+    }
+
+    .kpi-card.users-teachers .value {
+        color: #6366f1;
+    }
+
+    .kpi-card.users-admins .value {
+        color: #8b5cf6;
     }
 
     /* Charts Grid */
@@ -150,7 +192,8 @@
         <i class="fas fa-tachometer-alt"></i> Admin Dashboard
     </h1>
 
-    <!-- KPI Cards -->
+    <!-- School Statistics KPI Cards -->
+    <h2 class="section-title"><i class="fas fa-chart-line"></i> School Statistics</h2>
     <div class="kpi-grid">
         <div class="kpi-card total-applications">
             <h3><i class="fas fa-file-alt"></i> Total Applications</h3>
@@ -167,6 +210,27 @@
         <div class="kpi-card rejected">
             <h3><i class="fas fa-times-circle"></i> Rejected</h3>
             <p class="value">{{ $totalRejected }}</p>
+        </div>
+    </div>
+
+    <!-- Account Statistics KPI Cards -->
+    <h2 class="section-title"><i class="fas fa-users-cog"></i> Account Statistics</h2>
+    <div class="kpi-grid">
+        <div class="kpi-card users-total">
+            <h3><i class="fas fa-users"></i> Total User Accounts</h3>
+            <p class="value">{{ $totalUsers }}</p>
+        </div>
+        <div class="kpi-card users-students">
+            <h3><i class="fas fa-user-graduate"></i> Student Accounts</h3>
+            <p class="value">{{ $totalStudents }}</p>
+        </div>
+        <div class="kpi-card users-teachers">
+            <h3><i class="fas fa-chalkboard-teacher"></i> Teacher Accounts</h3>
+            <p class="value">{{ $totalTeachers }}</p>
+        </div>
+        <div class="kpi-card users-admins">
+            <h3><i class="fas fa-user-shield"></i> Admin & Staff Accounts</h3>
+            <p class="value">{{ $totalAdmins }}</p>
         </div>
     </div>
 

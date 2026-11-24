@@ -99,7 +99,6 @@
     <header class="header-section">
         <h1>Submit Grades</h1>
         <div style="display:flex; gap:10px; align-items:center;">
-            <a href="{{ route('teacher.subjects.create') }}" class="btn-primary">+ Add Subject</a>
             <span style="color: #2c5aa0; font-weight: 600;">Select a section and subject to submit grades</span>
         </div>
     </header>

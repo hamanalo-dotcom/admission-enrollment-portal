@@ -9,6 +9,8 @@ use App\Models\Subject;
 use App\Models\TeacherSectionAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class TeacherGradeController extends Controller
 {
@@ -27,29 +29,54 @@ class TeacherGradeController extends Controller
         $gradingPeriod = $request->input('grading_period', 'First Quarter');
         
         // Validate that teacher is assigned to this section/subject
-        $assignment = TeacherSectionAssignment::where('teacher_id', $teacher->id)
+        $assignmentQuery = TeacherSectionAssignment::where('teacher_id', $teacher->id)
             ->where('grade_level', $gradeLevel)
             ->where('section', $section)
-            ->where('school_year', $schoolYear)
-            ->when($subjectId, function($q) use ($subjectId) {
-                $q->where('subject_id', $subjectId);
-            })
-            ->first();
+            ->where('school_year', $schoolYear);
+
+        if ($subjectId) {
+            $assignmentQuery->where('subject_id', $subjectId);
+        }
+
+        $assignment = $assignmentQuery->first();
         
         if (!$assignment) {
             return redirect()->route('teacher.index')
                 ->with('error', 'You are not assigned to this section/subject.');
         }
+
+        // Verify the selected subject belongs to the authenticated teacher's assignment
+        if ($subjectId && $assignment->subject_id != $subjectId) {
+            return redirect()->route('teacher.index')
+                ->with('error', 'You are not assigned to this section/subject.');
+        }
+
+        if (!$subjectId && $assignment->subject_id) {
+            $subjectId = $assignment->subject_id;
+        }
         
-        // Get students enrolled in this section
-        $enrollments = Enrollment::where('grade_level', $gradeLevel)
-            ->where('section', $section)
-            ->where('status', 'enrolled')
-            ->with('admission', 'user')
-            ->get();
+        // Retrieve only enrolled students matching the selected teacher assignment
+        $enrollmentsQuery = Enrollment::where('grade_level', $assignment->grade_level)
+            ->where('section', $assignment->section)
+            ->where('school_year', $assignment->school_year)
+            ->where('status', 'enrolled');
+
+        if (!empty($assignment->strand)) {
+            $enrollmentsQuery->where('strand', $assignment->strand);
+        } else {
+            $enrollmentsQuery->whereNull('strand');
+        }
+
+        if (!empty($assignment->tvl_branch)) {
+            $enrollmentsQuery->where('tvl_branch', $assignment->tvl_branch);
+        } else {
+            $enrollmentsQuery->whereNull('tvl_branch');
+        }
+
+        $enrollments = $enrollmentsQuery->with('admission', 'user')->get();
         
         // Get subject
-        $subject = $subjectId ? Subject::findOrFail($subjectId) : null;
+        $subject = $subjectId ? Subject::find($subjectId) : null;
         
         // Determine grading periods based on grade level
         $isShs = in_array($gradeLevel, ['Grade 11', 'Grade 12']);
@@ -99,34 +126,42 @@ class TeacherGradeController extends Controller
             $gradingPeriod = $gradingPeriods[0];
         }
         
-        // Get existing grades for this section/subject/grading period
-        $existingGrades = Grade::where('teacher_id', $teacher->id)
+        // Get existing grades for this section/subject/grading period (scoped to this teacher)
+        $existingGradesQuery = Grade::where('teacher_id', $teacher->id)
             ->where('grade_level', $gradeLevel)
             ->where('section', $section)
             ->where('school_year', $schoolYear)
-            ->where('grading_period', $gradingPeriod)
-            ->when($subjectId, function($q) use ($subjectId) {
-                $q->where('subject_id', $subjectId);
-            })
-            ->get()
-            ->keyBy('student_id');
+            ->where('grading_period', $gradingPeriod);
+
+        if ($subjectId) {
+            $existingGradesQuery->where('subject_id', $subjectId);
+        }
+
+        $existingGrades = $existingGradesQuery->get()->keyBy('student_id');
         
-        // Get available subjects for this teacher assignment
-        // If subject_id is not in assignment, get all subjects for this grade level/strand
-        $subjects = Subject::where(function($q) use ($gradeLevel) {
-            $q->whereNull('grade_level')->orWhere('grade_level', $gradeLevel);
-        })
-        ->when($assignment->strand, function($q) use ($assignment) {
-            $q->where(function($query) use ($assignment) {
-                $query->whereNull('strand')->orWhere('strand', $assignment->strand);
-            });
-        })
-        ->orderBy('name')
-        ->get();
-        
-        // If no subjects found, create a default list or get all subjects
-        if ($subjects->isEmpty()) {
-            $subjects = Subject::orderBy('name')->get();
+        // Get available subjects for this teacher assignment in this exact class (strand + tvl_branch scoped)
+        $subjectAssignmentsQuery = TeacherSectionAssignment::where('teacher_id', $teacher->id)
+            ->where('grade_level', $gradeLevel)
+            ->where('section', $section)
+            ->where('school_year', $schoolYear);
+
+        if (!empty($assignment->strand)) {
+            $subjectAssignmentsQuery->where('strand', $assignment->strand);
+        } else {
+            $subjectAssignmentsQuery->whereNull('strand');
+        }
+
+        if (!empty($assignment->tvl_branch)) {
+            $subjectAssignmentsQuery->where('tvl_branch', $assignment->tvl_branch);
+        } else {
+            $subjectAssignmentsQuery->whereNull('tvl_branch');
+        }
+
+        $assignedSubjectIds = $subjectAssignmentsQuery->pluck('subject_id')->filter()->unique();
+
+        $subjects = Subject::whereIn('id', $assignedSubjectIds)->orderBy('name')->get();
+        if ($subjects->isEmpty() && $assignment->subject) {
+            $subjects = collect([$assignment->subject]);
         }
         
         // Semester is already determined above for SHS
@@ -179,70 +214,121 @@ class TeacherGradeController extends Controller
         if (!$assignment) {
             return back()->withErrors(['error' => 'You are not assigned to this section/subject.'])->withInput();
         }
-        
-        // Get strand if SHS
-        $strand = $assignment->strand;
-        
-        $savedCount = 0;
-        $updatedCount = 0;
-        
-        foreach ($validated['grades'] as $gradeData) {
-            // Check if grade already exists
-            $existingGrade = Grade::where('student_id', $gradeData['student_id'])
-                ->where('subject_id', $validated['subject_id'])
-                ->where('grading_period', $validated['grading_period'])
-                ->where('school_year', $validated['school_year'])
-                ->first();
-            
-            // Handle delete request
-            $shouldDelete = isset($gradeData['delete']) && (int)$gradeData['delete'] === 1;
-            if ($shouldDelete) {
-                if ($existingGrade) {
-                    $existingGrade->delete();
-                    $updatedCount++; // count deletes as updates for messaging simplicity
+
+        // Validate that every submitted student ID belongs to an enrolled student in the exact assigned class
+        $validEnrollmentsQuery = Enrollment::where('grade_level', $assignment->grade_level)
+            ->where('section', $assignment->section)
+            ->where('school_year', $assignment->school_year)
+            ->where('status', 'enrolled');
+
+        if (!empty($assignment->strand)) {
+            $validEnrollmentsQuery->where('strand', $assignment->strand);
+        } else {
+            $validEnrollmentsQuery->whereNull('strand');
+        }
+
+        if (!empty($assignment->tvl_branch)) {
+            $validEnrollmentsQuery->where('tvl_branch', $assignment->tvl_branch);
+        } else {
+            $validEnrollmentsQuery->whereNull('tvl_branch');
+        }
+
+        $validStudentIds = $validEnrollmentsQuery->pluck('user_id')->all();
+
+        // --- Two-pass atomic write wrapped in a DB transaction ---
+        // Pass 1 (pre-flight): validate all student IDs and grade ownership BEFORE any write.
+        // Pass 2: perform all creates/updates.
+        return DB::transaction(function () use ($validated, $teacher, $assignment, $validStudentIds) {
+            $strand = $assignment->strand;
+
+            // Pass 1: pre-flight validation — no writes yet
+            foreach ($validated['grades'] as $gradeData) {
+                if (!in_array($gradeData['student_id'], $validStudentIds)) {
+                    throw ValidationException::withMessages([
+                        'error' => 'Cannot submit grades for students outside your assigned class.'
+                    ]);
                 }
-                continue;
+
+                $existingGrade = Grade::where('student_id', $gradeData['student_id'])
+                    ->where('subject_id', $validated['subject_id'])
+                    ->where('grading_period', $validated['grading_period'])
+                    ->where('school_year', $validated['school_year'])
+                    ->first();
+
+                if ($existingGrade) {
+                    if ($existingGrade->teacher_id != $teacher->id) {
+                        throw ValidationException::withMessages([
+                            'error' => 'You cannot modify grades submitted by another teacher.'
+                        ]);
+                    }
+                    if ($existingGrade->grade_level !== $validated['grade_level'] || $existingGrade->section !== $validated['section']) {
+                        throw ValidationException::withMessages([
+                            'error' => 'You cannot modify grades for another class section.'
+                        ]);
+                    }
+                    if ($existingGrade->strand !== $assignment->strand) {
+                        throw ValidationException::withMessages([
+                            'error' => 'You cannot modify grades for another strand.'
+                        ]);
+                    }
+                }
             }
 
-            // If no grade value provided and not deleting, skip
-            if ($gradeData['grade_value'] === null || $gradeData['grade_value'] === '') {
-                continue;
+            // Pass 2: writes
+            $savedCount = 0;
+            $updatedCount = 0;
+
+            foreach ($validated['grades'] as $gradeData) {
+                // Handle delete request — preserve records; skip instead of deleting
+                $shouldDelete = isset($gradeData['delete']) && (int)$gradeData['delete'] === 1;
+                if ($shouldDelete) {
+                    continue;
+                }
+
+                // Skip if no grade value provided
+                if ($gradeData['grade_value'] === null || $gradeData['grade_value'] === '') {
+                    continue;
+                }
+
+                $existingGrade = Grade::where('student_id', $gradeData['student_id'])
+                    ->where('subject_id', $validated['subject_id'])
+                    ->where('grading_period', $validated['grading_period'])
+                    ->where('school_year', $validated['school_year'])
+                    ->first();
+
+                if ($existingGrade) {
+                    $existingGrade->update([
+                        'grade_value' => $gradeData['grade_value'],
+                        'remarks'     => $gradeData['remarks'] ?? null,
+                    ]);
+                    $updatedCount++;
+                } else {
+                    Grade::create([
+                        'student_id'     => $gradeData['student_id'],
+                        'teacher_id'     => $teacher->id,
+                        'subject_id'     => $validated['subject_id'],
+                        'grade_level'    => $validated['grade_level'],
+                        'section'        => $validated['section'],
+                        'strand'         => $strand,
+                        'school_year'    => $validated['school_year'],
+                        'grading_period' => $validated['grading_period'],
+                        'grade_value'    => $gradeData['grade_value'],
+                        'remarks'        => $gradeData['remarks'] ?? null,
+                    ]);
+                    $savedCount++;
+                }
             }
 
-            if ($existingGrade) {
-                // Update existing grade
-                $existingGrade->update([
-                    'grade_value' => $gradeData['grade_value'],
-                    'remarks' => $gradeData['remarks'] ?? null,
-                ]);
-                $updatedCount++;
-            } else {
-                // Create new grade
-                Grade::create([
-                    'student_id' => $gradeData['student_id'],
-                    'teacher_id' => $teacher->id,
-                    'subject_id' => $validated['subject_id'],
-                    'grade_level' => $validated['grade_level'],
-                    'section' => $validated['section'],
-                    'strand' => $strand,
-                    'school_year' => $validated['school_year'],
-                    'grading_period' => $validated['grading_period'],
-                    'grade_value' => $gradeData['grade_value'],
-                    'remarks' => $gradeData['remarks'] ?? null,
-                ]);
-                $savedCount++;
+            $message = '';
+            if ($savedCount > 0) {
+                $message .= "{$savedCount} grade(s) saved. ";
             }
-        }
-        
-        $message = '';
-        if ($savedCount > 0) {
-            $message .= "{$savedCount} grade(s) saved. ";
-        }
-        if ($updatedCount > 0) {
-            $message .= "{$updatedCount} grade(s) updated.";
-        }
-        
-        return back()->with('success', $message ?: 'No grades were saved.');
+            if ($updatedCount > 0) {
+                $message .= "{$updatedCount} grade(s) updated.";
+            }
+
+            return back()->with('success', $message ?: 'No grades were saved.');
+        });
     }
 
     /**

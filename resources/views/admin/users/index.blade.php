@@ -1,6 +1,12 @@
 @extends('layout.app')
 
 @section('content')
+@php
+    $indexRoute = route('admin.users.index');
+    $createRoute = route('admin.users.create');
+    $pageHeading = '👥 Users Management';
+    $createBtnText = 'Add New User';
+@endphp
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -272,11 +278,11 @@
         <!-- Header Section -->
         <div class="header-section">
             <div>
-                <h1>👥 Users Management</h1>
+                <h1>{{ $pageHeading }}</h1>
             </div>
             <div class="header-actions">
-                <a href="{{ route('admin.users.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add New User
+                <a href="{{ $createRoute }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> {{ $createBtnText }}
                 </a>
             </div>
         </div>
@@ -315,7 +321,7 @@
 
         <!-- Search and Filter Section -->
         <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); margin-bottom: 20px;">
-            <form method="GET" action="{{ route('admin.users.index') }}" style="display: flex; gap: 15px; align-items: center;">
+            <form method="GET" action="{{ $indexRoute }}" style="display: flex; gap: 15px; align-items: center;">
                 <input type="text" name="search" class="search-box" placeholder="Search by name or email..." value="{{ request('search') }}">
                 <select name="role" class="select-filter">
                     <option value="">All Roles</option>
@@ -328,7 +334,7 @@
                     <i class="fas fa-search"></i> Search
                 </button>
                 @if(request('search') || request('role'))
-                    <a href="{{ route('admin.users.index') }}" class="btn" style="background: #f5f7fa; color: #666;">
+                    <a href="{{ $indexRoute }}" class="btn" style="background: #f5f7fa; color: #666;">
                         <i class="fas fa-times"></i> Clear
                     </a>
                 @endif
@@ -369,7 +375,12 @@
                                 <td>{{ $user->created_at->format('M d, Y') }}</td>
                                 <td>
                                     <div class="action-buttons">
-                                        <a href="{{ route('admin.users.edit', $user->id) }}" class="btn-icon" title="Edit">
+                                        @php
+                                            $editRowRoute = route('admin.users.edit', $user->id);
+                                        @endphp
+                                        <a href="{{ $editRowRoute }}"
+                                           class="btn-icon"
+                                           title="Edit">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
                                         {{-- Delete functionality removed to preserve all data --}}

@@ -108,7 +108,7 @@
     <div class="sy-header-banner">
         <div>
             <h1><i class="fas fa-trash-restore"></i> Recycle Bin</h1>
-            <div class="sy-header-desc">School years moved to recycle bin. Restore or permanently delete them.</div>
+            <div class="sy-header-desc">School years moved to recycle bin. Restore them to make them visible again.</div>
         </div>
         <a href="{{ route($routePrefix . '.index') }}" class="btn-sy-back">
             <i class="fas fa-arrow-left"></i> Back to School Years
@@ -181,7 +181,7 @@
                                     <div class="sy-empty">
                                         <i class="fas fa-check-circle"></i>
                                         <p>Recycle bin is empty</p>
-                                        <small>All school years have been restored or permanently deleted.</small>
+                                        <small>The recycle bin is empty. All school years have been restored.</small>
                                     </div>
                                 </td>
                             </tr>

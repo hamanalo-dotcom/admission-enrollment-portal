@@ -22,11 +22,11 @@
     <div class="main-content">
         <div class="header-section">
             <h1 style="margin:0; color:#2c5aa0;">Enrollment Report</h1>
-            <a href="{{ route('admin.reports.index') }}" class="btn-secondary" style="margin-top:10px; display:inline-block;">← Back to Reports</a>
+            <a href="{{ route('registrar.reports.index') }}" class="btn-secondary" style="margin-top:10px; display:inline-block;">← Back to Reports</a>
         </div>
 
         <div style="background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.1);">
-            <form method="GET" action="{{ route('admin.reports.enrollment') }}" class="filters">
+            <form method="GET" action="{{ route('registrar.reports.enrollment') }}" class="filters">
                 <div style="grid-column: 1 / -1;">
                     <label>Search Student</label>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or email...">
@@ -69,7 +69,7 @@
                 </div>
                 <div style="grid-column: 1 / -1; display:flex; gap:8px; justify-content:flex-end;">
                     <button class="btn-primary" type="submit">Generate Report</button>
-                    <a class="btn-secondary" href="{{ route('admin.reports.enrollment') }}">Reset</a>
+                    <a class="btn-secondary" href="{{ route('registrar.reports.enrollment') }}">Reset</a>
                 </div>
             </form>
 

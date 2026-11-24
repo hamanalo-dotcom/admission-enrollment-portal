@@ -7,14 +7,43 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class AdminUserController extends Controller
+class AdminUserController extends Controller implements HasMiddleware
 {
+    /**
+     * Get the middleware that should be assigned to the controller.
+     */
+    public static function middleware(): array
+    {
+        return [
+            new Middleware(function ($request, $next) {
+                if (!auth()->check() || auth()->user()->role !== 'admin') {
+                    abort(403, 'Unauthorized action. Only administrators can manage user accounts.');
+                }
+                return $next($request);
+            }),
+        ];
+    }
+
+    /**
+     * Guard account-management operations strictly to Admin role.
+     */
+    protected function authorizeAdmin(): void
+    {
+        if (!auth()->check() || auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized action. Only administrators can manage user accounts.');
+        }
+    }
+
     /**
      * Display a listing of users
      */
     public function index(Request $request)
     {
+        $this->authorizeAdmin();
+
         $query = User::query();
 
         // Search functionality
@@ -47,6 +76,8 @@ class AdminUserController extends Controller
      */
     public function create()
     {
+        $this->authorizeAdmin();
+
         return view('admin.users.create');
     }
 
@@ -54,49 +85,65 @@ class AdminUserController extends Controller
      * Store a newly created user
      */
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'firstname' => ['required', 'string', 'max:255'],
-            'middlename' => ['nullable', 'string', 'max:255'],
-            'lastname' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'in:admin,registrar,teacher,student'],
-            'birthdate' => ['required', 'date'],
-            'sex' => ['required', 'in:male,female,other'],
-            'contact_no' => ['nullable', 'string', 'max:20'],
-            'emergency_contact' => ['nullable', 'string', 'max:20'],
-            'address' => ['nullable', 'string', 'max:500'],
-        ]);
+{
+    $this->authorizeAdmin();
 
-        // Auto-assign teacher role if email ends with @deped.gov.ph
-        if (str_ends_with(strtolower($validated['email']), '@deped.gov.ph')) {
-            $validated['role'] = 'teacher';
-        }
+    $validated = $request->validate([
+        'firstname' => ['required', 'string', 'max:255'],
+        'middlename' => ['nullable', 'string', 'max:255'],
+        'lastname' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+        'password' => [
+            'required',
+            'string',
+            'min:8',
+            'confirmed',
+            function ($attribute, $value, $fail) {
+                if (trim((string) $value) === '') {
+                    $fail('The password cannot consist only of whitespace.');
+                }
+            },
+        ],
+        'role' => ['required', 'in:admin,registrar,teacher,student'],
+        'birthdate' => ['required', 'date'],
+        'sex' => ['required', 'in:male,female,other'],
+        'contact_no' => ['nullable', 'string', 'max:20'],
+        'emergency_contact' => ['nullable', 'string', 'max:20'],
+        'address' => ['required', 'string', 'max:500'],
+    ]);
 
-        $user = User::create([
-            'firstname' => $validated['firstname'],
-            'middlename' => $validated['middlename'] ?? '',
-            'lastname' => $validated['lastname'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
-            'birthdate' => $validated['birthdate'],
-            'sex' => $validated['sex'],
-            'contact_no' => $validated['contact_no'] ?? '',
-            'emergency_contact' => $validated['emergency_contact'] ?? '',
-            'address' => $validated['address'] ?? '',
-        ]);
+    $email = strtolower(trim($validated['email']));
 
-        return redirect()->route('admin.users.index')
-            ->with('success', 'User created successfully!');
-    }
+    // DepEd email addresses must always have the Teacher role.
+    $role = str_ends_with($email, '@deped.gov.ph')
+        ? 'teacher'
+        : $validated['role'];
+
+    $user = User::create([
+        'firstname' => $validated['firstname'],
+        'middlename' => $validated['middlename'] ?? '',
+        'lastname' => $validated['lastname'],
+        'email' => $email,
+        'password' => Hash::make($validated['password']),
+        'role' => $role,
+        'birthdate' => $validated['birthdate'],
+        'sex' => $validated['sex'],
+        'contact_no' => $validated['contact_no'] ?? '',
+        'emergency_contact' => $validated['emergency_contact'] ?? '',
+        'address' => $validated['address'],
+    ]);
+
+    return redirect()->route('admin.users.index')
+        ->with('success', 'User created successfully!');
+}
 
     /**
      * Display the specified user
      */
     public function show(User $user)
     {
+        $this->authorizeAdmin();
+
         return view('admin.users.show', compact('user'));
     }
 
@@ -105,6 +152,8 @@ class AdminUserController extends Controller
      */
     public function edit(User $user)
     {
+        $this->authorizeAdmin();
+
         return view('admin.users.edit', compact('user'));
     }
 
@@ -113,6 +162,8 @@ class AdminUserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        $this->authorizeAdmin();
+
         $validated = $request->validate([
             'firstname' => ['required', 'string', 'max:255'],
             'middlename' => ['nullable', 'string', 'max:255'],
@@ -126,12 +177,15 @@ class AdminUserController extends Controller
             'address' => ['nullable', 'string', 'max:500'],
         ]);
 
-        // Auto-assign teacher role if email ends with @deped.gov.ph
-        if (str_ends_with(strtolower($validated['email']), '@deped.gov.ph')) {
-            $validated['role'] = 'teacher';
-        }
+        $email = strtolower(trim($validated['email']));
 
-        $user->update($validated);
+$validated['email'] = $email;
+
+if (str_ends_with($email, '@deped.gov.ph')) {
+    $validated['role'] = 'teacher';
+}
+
+$user->update($validated);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User updated successfully!');
@@ -143,6 +197,8 @@ class AdminUserController extends Controller
     // Delete functionality removed to preserve all data
     public function destroy(User $user)
     {
+        $this->authorizeAdmin();
+
         // Data preservation: Delete functionality has been disabled
         return redirect()->route('admin.users.index')
             ->with('error', 'Delete functionality has been disabled to preserve all data.');
@@ -153,29 +209,37 @@ class AdminUserController extends Controller
      */
     public function generatePassword()
     {
-        // Generate a random password (12 characters: letters, numbers, and special chars)
+        $this->authorizeAdmin();
+
+        // Cryptographically secure random password generation (12 characters: uppercase, lowercase, numbers, special chars)
         $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $lowercase = 'abcdefghijklmnopqrstuvwxyz';
         $numbers = '0123456789';
         $special = '!@#$%^&*';
-        
-        // Ensure it has at least one of each type
-        $password = '';
-        $password .= $uppercase[rand(0, 25)];
-        $password .= $lowercase[rand(0, 25)];
-        $password .= $numbers[rand(0, 9)];
-        $password .= $special[rand(0, 7)];
-        
-        // Fill the rest with random characters from all sets
         $allChars = $uppercase . $lowercase . $numbers . $special;
-        for ($i = strlen($password); $i < 12; $i++) {
-            $password .= $allChars[rand(0, strlen($allChars) - 1)];
-        }
-        
-        // Shuffle the password to randomize the order
-        $randomPassword = str_shuffle($password);
 
-        return response()->json(['password' => $randomPassword]);
+        // Ensure at least one character from each required set
+        $chars = [
+            $uppercase[random_int(0, strlen($uppercase) - 1)],
+            $lowercase[random_int(0, strlen($lowercase) - 1)],
+            $numbers[random_int(0, strlen($numbers) - 1)],
+            $special[random_int(0, strlen($special) - 1)],
+        ];
+
+        // Securely fill remaining characters up to length 12
+        for ($i = count($chars); $i < 12; $i++) {
+            $chars[] = $allChars[random_int(0, strlen($allChars) - 1)];
+        }
+
+        // Fisher-Yates shuffle using cryptographically secure random_int
+        for ($i = count($chars) - 1; $i > 0; $i--) {
+            $j = random_int(0, $i);
+            $temp = $chars[$i];
+            $chars[$i] = $chars[$j];
+            $chars[$j] = $temp;
+        }
+
+        return response()->json(['password' => implode('', $chars)]);
     }
 
     /**
@@ -183,49 +247,52 @@ class AdminUserController extends Controller
      */
     public function changePassword(Request $request, User $user)
     {
-        // Debug: Log the incoming request
-        \Log::info('changePassword method called', [
-            'user_id' => $user->id,
-            'email' => $user->email,
+        $this->authorizeAdmin();
+
+        // Audit log the incoming request metadata without sensitive values
+        \Log::info('Admin changePassword initiated', [
+            'target_user_id' => $user->id,
+            'admin_id' => auth()->id(),
             'request_method' => $request->method(),
-            'has_password' => $request->has('password'),
-            'password_length' => $request->has('password') ? strlen($request->input('password')) : 0
         ]);
         
         // Validate the password
         try {
             $validated = $request->validate([
-                'password' => ['required', 'string', 'min:8'],
+                'password' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'confirmed',
+                    function ($attribute, $value, $fail) {
+                        if (trim((string) $value) === '') {
+                            $fail('The password cannot consist only of whitespace.');
+                        }
+                    },
+                ],
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Password validation failed', [
-                'errors' => $e->errors(),
-                'input' => $request->all()
+                'target_user_id' => $user->id,
+                'admin_id' => auth()->id(),
+                'validation_errors' => array_keys($e->errors()),
             ]);
             return back()->withErrors($e->errors())->withInput();
         }
 
-        // Get the plain password before hashing - ensure it's a string and trim whitespace
-        $plainPassword = trim((string) $validated['password']);
+        // Preserve password exactly as entered without trimming
+        $plainPassword = (string) $validated['password'];
         
-        if (empty($plainPassword)) {
-            \Log::error('Password is empty after validation', ['user_id' => $user->id]);
-            return back()->withErrors(['password' => 'Password cannot be empty.']);
+        if (trim($plainPassword) === '') {
+            \Log::error('Password is only whitespace after validation', [
+                'target_user_id' => $user->id,
+                'admin_id' => auth()->id(),
+            ]);
+            return back()->withErrors(['password' => 'The password cannot consist only of whitespace.']);
         }
-        
-        // Log for debugging
-        \Log::info('Changing password', [
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'password_length' => strlen($plainPassword),
-            'has_special_chars' => preg_match('/[!@#$%^&*]/', $plainPassword) ? 'Yes' : 'No'
-        ]);
         
         // Update password - ensure it's properly hashed using bcrypt
         $hashedPassword = Hash::make($plainPassword);
-        
-        // Get the old password hash for comparison
-        $oldPasswordHash = $user->password;
         
         // Directly update the password attribute to ensure it's saved
         $user->password = $hashedPassword;
@@ -233,8 +300,8 @@ class AdminUserController extends Controller
 
         if (!$saved) {
             \Log::error('Failed to save password', [
-                'user_id' => $user->id,
-                'errors' => $user->getErrors()
+                'target_user_id' => $user->id,
+                'admin_id' => auth()->id(),
             ]);
             return back()->withErrors(['password' => 'Failed to update password. Please try again.']);
         }
@@ -245,23 +312,19 @@ class AdminUserController extends Controller
         // Verify the password was saved correctly by checking the hash
         if (!Hash::check($plainPassword, $user->password)) {
             \Log::error('Password verification failed after save', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'password_length' => strlen($plainPassword),
-                'old_hash' => substr($oldPasswordHash, 0, 20),
-                'new_hash' => substr($user->password, 0, 20)
+                'target_user_id' => $user->id,
+                'admin_id' => auth()->id(),
             ]);
             return back()->withErrors(['password' => 'Password verification failed. Please try generating a new password.']);
         }
         
-        \Log::info('Password updated successfully', [
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'password_changed' => $oldPasswordHash !== $user->password
+        \Log::info('Password updated successfully by admin', [
+            'target_user_id' => $user->id,
+            'admin_id' => auth()->id(),
         ]);
 
         return redirect()->route('admin.users.edit', $user->id)
-            ->with('success', 'Password updated successfully for ' . $user->firstname . ' ' . $user->lastname . '! The student can now login with the new password.');
+            ->with('success', 'Password updated successfully for ' . $user->firstname . ' ' . $user->lastname . '! The user can now login with the new password.');
     }
 }
 

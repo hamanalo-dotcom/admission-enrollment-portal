@@ -9,26 +9,30 @@ class AdmissionPolicy
 {
     public function view(User $user, Admission $admission): bool
     {
-        // Owner can always view own admission; admins/registrars can view all
-        return $user->id === $admission->user_id
-            || in_array($user->role, [User::ROLE_ADMIN, User::ROLE_REGISTRAR]);
+        // Registrar can always view all admissions
+        if ($user->role === User::ROLE_REGISTRAR) {
+            return true;
+        }
+
+        // Only a student who owns the admission can view it
+        return $user->role === User::ROLE_STUDENT && $user->id === $admission->user_id;
     }
 
     public function update(User $user, Admission $admission): bool
     {
-        // Admins/registrars can update
-        if (in_array($user->role, [User::ROLE_ADMIN, User::ROLE_REGISTRAR])) {
+        // Registrar can update
+        if ($user->role === User::ROLE_REGISTRAR) {
             return true;
         }
-        // Student (owner) can always update their own admissions
-        // This allows students to keep their information up-to-date even after approval
-        return $user->id === $admission->user_id;
+
+        // Only the student who owns the admission can update it
+        return $user->role === User::ROLE_STUDENT && $user->id === $admission->user_id;
     }
 
     public function create(User $user): bool
     {
-        // Students can create their admission; admins/registrars as needed
-        return in_array($user->role, [User::ROLE_STUDENT, User::ROLE_ADMIN, User::ROLE_REGISTRAR]);
+        // Students can create their admission; registrars as needed
+        return in_array($user->role, [User::ROLE_STUDENT, User::ROLE_REGISTRAR]);
     }
 }
 

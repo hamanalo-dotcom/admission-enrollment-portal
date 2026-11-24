@@ -17,46 +17,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link href='https://cdn.boxicons.com/fonts/basic/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
     <link rel="stylesheet" href="{{ asset('css/admin-ui.css') }}">
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f8f9fa;
-        }
-
-        .header-container {
-            margin-left: 250px;
-            transition: margin-left 0.3s ease;
-        }
-
-        .main {
-            margin-left: 250px;
-            padding: 20px;
-            transition: margin-left 0.3s ease;
-            min-height: 100vh;
-            padding-top: 80px;
-            position: relative;
-            z-index: 10;
-        }
-
-        @media (max-width: 768px) {
-            .header-container {
-                margin-left: 0 !important;
-            }
-            
-            .main {
-                margin-left: 0;
-                padding-top: 70px;
-            }
-        }
-
         .main.shift {
             margin-left: 10px;
         }
@@ -72,74 +36,6 @@
                 padding: 0;
             }
         }
-
-        .box {
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            background-color: #fff;
-            margin-bottom: 20px;
-        }
-
-        .table-responsive {
-            margin-top: 20px;
-        }
-
-        hr {
-            margin: 20px 0;
-        }
-
-        /* Pagination Styles */
-        .pagination {
-            display: flex;
-            list-style: none;
-            padding: 0;
-            margin: 30px 0 0 0;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .pagination li {
-            display: inline-block;
-            margin: 0;
-        }
-
-        .pagination li a,
-        .pagination li span {
-            display: inline-block;
-            padding: 10px 14px;
-            border: 1px solid #d4e5f3;
-            border-radius: 6px;
-            text-decoration: none;
-            color: #2c5aa0;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            min-width: 40px;
-            text-align: center;
-            background: #fff;
-        }
-        
-        .pagination li.disabled span {
-            color: #999;
-            border-color: #e0e0e0;
-            background: #f5f5f5;
-            cursor: not-allowed;
-        }
-
-        .pagination li a:hover {
-            background: linear-gradient(135deg, #2c5aa0 0%, #526c86 100%);
-            color: white;
-            border-color: #2c5aa0;
-        }
-
-        .pagination li.active span {
-            background: linear-gradient(135deg, #2c5aa0 0%, #526c86 100%);
-            color: white;
-            border-color: #2c5aa0;
-        }
-
     </style>
 </head>
 

@@ -1,6 +1,12 @@
 @extends('layout.app')
 
 @section('content')
+@php
+    $isRegistrar = request()->routeIs('registrar.*');
+    $indexRoute = $isRegistrar ? route('registrar.teacher-assignments.index') : route('admin.teacher-assignments.index');
+    $storeRoute = $isRegistrar ? route('registrar.teacher-assignments.store') : route('admin.teacher-assignments.store');
+    $sectionsUrl = $isRegistrar ? route('registrar.teacher-assignments.sections') : route('admin.teacher-assignments.sections');
+@endphp
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -137,7 +143,7 @@
         @endif
 
         <div class="form-container">
-            <form action="{{ route('admin.teacher-assignments.store') }}" method="POST" id="assignmentForm">
+            <form action="{{ $storeRoute }}" method="POST" id="assignmentForm">
                 @csrf
 
                 <div class="form-group">
@@ -218,7 +224,7 @@
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Assign Teacher</button>
-                    <a href="{{ route('admin.teacher-assignments.index') }}" class="btn btn-secondary">Cancel</a>
+                    <a href="{{ $indexRoute }}" class="btn btn-secondary">Cancel</a>
                 </div>
             </form>
         </div>
@@ -299,7 +305,7 @@
             const sectionsContainer = document.getElementById('sections-container');
             
             if (gradeLevel) {
-                const url = `{{ url('/admin/teacher-assignments/sections') }}?grade_level=${encodeURIComponent(gradeLevel)}&strand=${encodeURIComponent(strandEl.value || '')}&tvl_branch=${encodeURIComponent(document.getElementById('tvl_branch').value || '')}`;
+                const url = `{{ $sectionsUrl }}?grade_level=${encodeURIComponent(gradeLevel)}&strand=${encodeURIComponent(strandEl.value || '')}&tvl_branch=${encodeURIComponent(document.getElementById('tvl_branch').value || '')}`;
                 console.log('Fetching sections from:', url);
                 
                 fetch(url, {

@@ -912,7 +912,7 @@
                         <i class="fas fa-envelope"></i>
                     </div>
                     <h4>Email</h4>
-                    <a href="mailto:sanroquehighschool2001@gmail.com">sanroquehighschool2001@gmail.com</a>
+                    <a href="mailto:302027@deped.gov.ph">302027@deped.gov.ph</a>
                 </div>
                 <div class="sr-contact-card">
                     <div class="sr-contact-icon">
