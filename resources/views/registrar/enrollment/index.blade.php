@@ -413,35 +413,21 @@
                                 @if($hasShs)
                                     <td>{{ $isShs ? ($enrollment->strand ?? '-') : '-' }}</td>
                                 @endif
-                                <td>
-                                    <form action="{{ route('registrar.enrollments.assignSection', $enrollment->id) }}" method="POST" style="display: inline;">
-                                        @csrf 
-                                        @method('PUT')
-                                        <select name="section" class="form-select section-select" onchange="this.form.submit()">
-                                            <option value="">-</option>
-                                            @foreach ($sections as $section)
-                                                <option value="{{ $section }}" {{ $enrollment->section == $section ? 'selected' : '' }}>
-                                                    {{ $section }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </form>
-                                </td>
+                                <td>{{ $enrollment->section ?: '-' }}</td>
                                 <td>{{ $enrollment->school_year ?? '-' }}</td>
                                 @if($hasShs)
                                     <td>{{ $isShs ? ($enrollment->semester ?? '-') : '-' }}</td>
                                 @endif
                                 <td>
-                                    <form action="{{ route('registrar.enrollments.updateEnrollmentStatus', $enrollment->id) }}" method="POST" style="display: inline;">
-                                        @csrf
-                                        @method('PUT')
-                                        <select name="status" class="form-select" onchange="this.form.submit()">
-                                            <option value="pending" {{ $enrollment->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                            <option value="enrolled" {{ $enrollment->status == 'enrolled' ? 'selected' : '' }}>Enrolled</option>
-                                            <option value="cancelled" {{ $enrollment->status == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                                            <option value="completed" {{ $enrollment->status == 'completed' ? 'selected' : '' }}>Completed</option>
-                                        </select>
-                                    </form>
+                                    @php
+                                        $statusKey = strtolower($enrollment->status ?? 'pending');
+                                        $statusBadgeClass = in_array($statusKey, ['pending', 'enrolled', 'cancelled', 'completed'])
+                                            ? 'status-' . $statusKey
+                                            : 'status-pending';
+                                    @endphp
+                                    <span class="status-badge {{ $statusBadgeClass }}">
+                                        {{ ucfirst($enrollment->status ?? 'Pending') }}
+                                    </span>
                                 </td>
                                 <td>
                                     <div class="action-buttons">

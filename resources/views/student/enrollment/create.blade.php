@@ -111,9 +111,59 @@
             border-bottom: 2px solid #4a8fd8;
         }
 
+        .subject-list-box {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #d4e5f3;
+            border-radius: 8px;
+            padding: 8px 12px;
+            background: #ffffff;
+        }
+
+        .subject-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 8px 10px 10px;
+            border-bottom: 1px solid #e6eef7;
+            margin: 0;
+        }
+
+        .subject-row:last-child {
+            border-bottom: none;
+        }
+
+        .subject-row .form-check-input {
+            float: none;
+            margin: 3px 0 0 0;
+            flex: 0 0 auto;
+            width: 1.1em;
+            height: 1.1em;
+            cursor: pointer;
+        }
+
+        .subject-row .form-check-label {
+            flex: 1 1 auto;
+            min-width: 0;
+            margin: 0;
+            cursor: pointer;
+            line-height: 1.45;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
         @media (max-width: 768px) {
             .form-card {
                 padding: 25px;
+            }
+
+            .subject-list-box {
+                padding: 6px 10px;
+            }
+
+            .subject-row {
+                gap: 10px;
+                padding: 10px 6px 10px 8px;
             }
 
             .form-card h2 {
@@ -337,7 +387,7 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Subjects to Take <span class="text-danger">*</span></label>
-                                        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #d4e5f3; border-radius: 8px; padding: 10px; background: #f9fbfd;">
+                                        <div class="subject-list-box">
                                             @foreach($availableSubjects as $subject)
                                                 @php
                                                     $isSelected = false;
@@ -353,15 +403,15 @@
                                                         $isDropped = in_array($subject->id, $currentSubjects['dropped']);
                                                     }
                                                 @endphp
-                                                <div class="form-check mb-2" style="padding: 8px; border-bottom: 1px solid #e0e0e0;">
+                                                <div class="subject-row">
                                                     <input class="form-check-input subject-take-checkbox" 
                                                         type="checkbox" 
                                                         name="selected_subjects[]" 
                                                         value="{{ $subject->id }}" 
                                                         id="subject_take_{{ $subject->id }}"
                                                         {{ $isSelected ? 'checked' : '' }}
-                                                        onchange="handleSubjectSelection({{ $subject->id }})">
-                                                    <label class="form-check-label" for="subject_take_{{ $subject->id }}" style="cursor: pointer; width: 100%;">
+                                                        onchange="handleSubjectSelection({{ $subject->id }}, 'take')">
+                                                    <label class="form-check-label" for="subject_take_{{ $subject->id }}">
                                                         <strong>{{ $subject->name }}</strong>
                                                         @if($subject->code)
                                                             <small class="text-muted">({{ $subject->code }})</small>
@@ -375,7 +425,7 @@
 
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Subjects to Drop</label>
-                                        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #d4e5f3; border-radius: 8px; padding: 10px; background: #f9fbfd;">
+                                        <div class="subject-list-box">
                                             @foreach($availableSubjects as $subject)
                                                 @php
                                                     $isDropped = false;
@@ -385,15 +435,15 @@
                                                         $isDropped = in_array($subject->id, $currentSubjects['dropped']);
                                                     }
                                                 @endphp
-                                                <div class="form-check mb-2" style="padding: 8px; border-bottom: 1px solid #e0e0e0;">
+                                                <div class="subject-row">
                                                     <input class="form-check-input subject-drop-checkbox" 
                                                         type="checkbox" 
                                                         name="dropped_subjects[]" 
                                                         value="{{ $subject->id }}" 
                                                         id="subject_drop_{{ $subject->id }}"
                                                         {{ $isDropped ? 'checked' : '' }}
-                                                        onchange="handleSubjectSelection({{ $subject->id }})">
-                                                    <label class="form-check-label" for="subject_drop_{{ $subject->id }}" style="cursor: pointer; width: 100%;">
+                                                        onchange="handleSubjectSelection({{ $subject->id }}, 'drop')">
+                                                    <label class="form-check-label" for="subject_drop_{{ $subject->id }}">
                                                         <strong>{{ $subject->name }}</strong>
                                                         @if($subject->code)
                                                             <small class="text-muted">({{ $subject->code }})</small>
@@ -608,21 +658,18 @@
             studentTypeSelect.addEventListener('change', handleStudentTypeChange);
         }
 
-        // Handle subject selection for transferees
-        function handleSubjectSelection(subjectId) {
+        // Handle mutually exclusive subject selection for transferees by subject ID
+        function handleSubjectSelection(subjectId, source) {
             const takeCheckbox = document.getElementById('subject_take_' + subjectId);
             const dropCheckbox = document.getElementById('subject_drop_' + subjectId);
-            
-            // If a subject is selected to take, uncheck it from drop
-            if (takeCheckbox && takeCheckbox.checked && dropCheckbox) {
+
+            if (source === 'take' && takeCheckbox && takeCheckbox.checked && dropCheckbox) {
                 dropCheckbox.checked = false;
-            }
-            
-            // If a subject is selected to drop, uncheck it from take
-            if (dropCheckbox && dropCheckbox.checked && takeCheckbox) {
+            } else if (source === 'drop' && dropCheckbox && dropCheckbox.checked && takeCheckbox) {
                 takeCheckbox.checked = false;
             }
         }
+        window.handleSubjectSelection = handleSubjectSelection;
 
         // Validate that at least one subject is selected to take for transferees
         const enrollmentForm = document.querySelector('form');

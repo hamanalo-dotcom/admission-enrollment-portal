@@ -157,9 +157,12 @@ class StudentEnrollmentController extends Controller
 
         // Validate subject selection for transferees
         if ($validated['student_type'] === 'transferee') {
-            if (empty($validated['selected_subjects']) || count($validated['selected_subjects']) === 0) {
-                return back()->withErrors(['selected_subjects' => 'Please select at least one subject to take.'])->withInput();
-            }
+            [$validated['selected_subjects'], $validated['dropped_subjects']] = $this->validateTransfereeSubjects(
+                $validated['selected_subjects'] ?? [],
+                $validated['dropped_subjects'] ?? [],
+                $validated['grade_level'],
+                $validated['strand'] ?? null
+            );
         }
 
         // Ensure the submitted admission belongs to the currently authenticated student
@@ -455,9 +458,12 @@ class StudentEnrollmentController extends Controller
 
         // Validate subject selection for transferees
         if ($validated['student_type'] === 'transferee') {
-            if (empty($validated['selected_subjects']) || count($validated['selected_subjects']) === 0) {
-                return back()->withErrors(['selected_subjects' => 'Please select at least one subject to take.'])->withInput();
-            }
+            [$validated['selected_subjects'], $validated['dropped_subjects']] = $this->validateTransfereeSubjects(
+                $validated['selected_subjects'] ?? [],
+                $validated['dropped_subjects'] ?? [],
+                $validated['grade_level'],
+                $validated['strand'] ?? null
+            );
         }
 
         // Students cannot change school_year or section (admin/registrar only)
@@ -490,6 +496,56 @@ class StudentEnrollmentController extends Controller
 
         return redirect()->route('student.enrollment.index')
             ->with('success', $message);
+    }
+
+    /**
+     * Validate transferee subject selections (require at least one to take,
+     * prevent overlap with dropped subjects, and ensure subjects match grade/strand).
+     *
+     * @return array{0: array<int, int>, 1: ?array<int, int>}
+     */
+    private function validateTransfereeSubjects(array $selected, array $dropped, string $gradeLevel, ?string $strand): array
+    {
+        $selectedIds = array_values(array_unique(array_map('intval', $selected)));
+        $droppedIds = array_values(array_unique(array_map('intval', $dropped)));
+
+        if (empty($selectedIds)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'selected_subjects' => 'Please select at least one subject to take.',
+            ]);
+        }
+
+        if (!empty(array_intersect($selectedIds, $droppedIds))) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'dropped_subjects' => 'A subject cannot be selected in both Subjects to Take and Subjects to Drop.',
+            ]);
+        }
+
+        $allowedIds = Subject::where(function ($q) use ($gradeLevel) {
+                $q->whereNull('grade_level')->orWhere('grade_level', $gradeLevel);
+            })
+            ->when($strand, function ($q) use ($strand) {
+                $q->where(function ($query) use ($strand) {
+                    $query->whereNull('strand')->orWhere('strand', $strand);
+                });
+            })
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if (!empty(array_diff($selectedIds, $allowedIds))) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'selected_subjects' => 'One or more selected subjects to take do not belong to your grade level or strand.',
+            ]);
+        }
+
+        if (!empty(array_diff($droppedIds, $allowedIds))) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'dropped_subjects' => 'One or more selected subjects to drop do not belong to your grade level or strand.',
+            ]);
+        }
+
+        return [$selectedIds, !empty($droppedIds) ? $droppedIds : null];
     }
 
     /**

@@ -1008,7 +1008,8 @@
                         </div>
                         <div class="col-md-4">
                             <label class="adm-label">Email <span class="req">*</span></label>
-                            <input type="email" name="email" class="form-control" value="{{ old('email', $user->email ?? '') }}" {{ $user ? 'readonly' : '' }} required>
+                            <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $editing ? ($admission->email ?? ($user->email ?? '')) : ($user->email ?? '')) }}" {{ $user ? 'readonly' : '' }} required>
+                            <div class="invalid-feedback @error('email') d-block @enderror" id="email_error">@error('email'){{ $message }}@enderror</div>
                             @if($user)
                                 <span class="field-hint">Must match your account email.</span>
                             @else
@@ -1434,17 +1435,70 @@
 
     function prevStep(step) { goToStep(step); }
 
+    const EMAIL_REGEX = /^[^\s@]+@(?:[^\s@.]+\.)+[^\s@.]{2,}$/;
+
+    function validateEmailField() {
+        const emailInput = document.getElementById('email');
+        const emailError = document.getElementById('email_error');
+        if (!emailInput) return { valid: true, reason: null, message: '' };
+
+        const value = emailInput.value.trim();
+        let reason = null;
+        let message = '';
+
+        if (!value) {
+            reason = 'empty';
+            message = 'Email address is required.';
+        } else if (emailInput.validity?.typeMismatch || !EMAIL_REGEX.test(value)) {
+            reason = 'format';
+            message = 'Please enter a valid email address (e.g., student@gmail.com).';
+        }
+
+        if (reason) {
+            emailInput.classList.add('is-invalid');
+            if (emailError) {
+                emailError.textContent = message;
+                emailError.classList.add('d-block');
+            }
+            return { valid: false, reason, message };
+        }
+
+        emailInput.classList.remove('is-invalid');
+        if (emailError) {
+            emailError.textContent = '';
+            emailError.classList.remove('d-block');
+        }
+        return { valid: true, reason: null, message: '' };
+    }
+
     function validateStep1() {
         const required = document.querySelectorAll('#step1 [required]');
-        let valid = true;
+        let hasMissing = false;
         required.forEach(f => {
-            if (!f.value.trim()) { f.classList.add('is-invalid'); valid = false; }
+            if (f.id === 'email') return;
+            if (!f.value.trim()) { f.classList.add('is-invalid'); hasMissing = true; }
             else f.classList.remove('is-invalid');
         });
-        if (!valid) {
-            Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Please fill in all required fields in Step 1.' });
+
+        const emailResult = validateEmailField();
+        if (!emailResult.valid && emailResult.reason === 'empty') {
+            hasMissing = true;
         }
-        return valid;
+
+        if (hasMissing || !emailResult.valid) {
+            let alertText = 'Please fill in all required fields in Step 1.';
+            if (!emailResult.valid && emailResult.reason === 'format') {
+                alertText = hasMissing
+                    ? 'Please fill in all required fields and enter a valid email address.'
+                    : emailResult.message;
+            }
+            Swal.fire({ icon: 'error', title: 'Validation Error', text: alertText });
+            if (!hasMissing && !emailResult.valid) {
+                document.getElementById('email')?.focus();
+            }
+            return false;
+        }
+        return true;
     }
 
     function validateStep2() {
@@ -1821,6 +1875,20 @@
         const strandSel = document.getElementById('strand');
         if (strandSel) strandSel.addEventListener('change', toggleStrand);
 
+        const emailInputEl = document.getElementById('email');
+        if (emailInputEl && !emailInputEl.readOnly) {
+            emailInputEl.addEventListener('blur', function () {
+                if (emailInputEl.value.trim() !== '' || emailInputEl.classList.contains('is-invalid')) {
+                    validateEmailField();
+                }
+            });
+            emailInputEl.addEventListener('input', function () {
+                if (emailInputEl.classList.contains('is-invalid')) {
+                    validateEmailField();
+                }
+            });
+        }
+
         const admForm = document.getElementById('admissionForm');
         if (admForm) {
             let clickedButton = null;
@@ -1831,6 +1899,17 @@
             admForm.addEventListener('submit', function(e) {
                 removeFileRequirements();
                 const isDraft = clickedButton === 'draft';
+                if (!isDraft) {
+                    const emailResult = validateEmailField();
+                    if (!emailResult.valid) {
+                        e.preventDefault();
+                        goToStep(1);
+                        Swal.fire({ icon: 'error', title: 'Validation Error', text: emailResult.message });
+                        document.getElementById('email')?.focus();
+                        clickedButton = null;
+                        return false;
+                    }
+                }
                 if (!isDraft && !isEditing) {
                     const type = (studentType?.value || '').toLowerCase();
                     const optFiled = ['medical_certificate','id_picture'];

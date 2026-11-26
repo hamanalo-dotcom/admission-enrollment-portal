@@ -174,7 +174,7 @@ class StudentAdmissionController extends Controller
             'barangay_code' => 'nullable|string|max:255',
             'street' => 'nullable|string|max:255',
             'contact_no' => $isDraft ? 'nullable|string|max:50' : 'required|string|max:50',
-            'email' => $isDraft ? 'nullable|email|max:255' : 'required|email|max:255',
+            'email' => $isDraft ? 'nullable|email:rfc,filter|max:255' : 'required|email:rfc,filter|max:255',
 
             // Family Information
             'father_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
@@ -369,9 +369,9 @@ session([
             'barangay_code' => 'nullable|string|max:255',
             'street' => 'nullable|string|max:255',
             'contact_no' => $isDraft ? 'nullable|string|max:50' : 'required|string|max:50',
-            'email' => $isDraft ? 'nullable|email|max:255' : [
+            'email' => $isDraft ? 'nullable|email:rfc,filter|max:255' : [
                 'required',
-                'email',
+                'email:rfc,filter',
                 'max:255',
                 function ($attribute, $value, $fail) {
                     if ($value && $value !== Auth::user()->email) {
@@ -687,9 +687,9 @@ public function downloadPdf(Request $request, Admission $admission)
             'barangay_code' => 'nullable|string|max:255',
             'street' => 'nullable|string|max:255',
             'contact_no' => $isDraft ? 'nullable|string|max:50' : 'required|string|max:50',
-            'email' => $isDraft ? 'nullable|email|max:255' : [
+            'email' => $isDraft ? 'nullable|email:rfc,filter|max:255' : [
                 'required',
-                'email',
+                'email:rfc,filter',
                 'max:255',
                 function ($attribute, $value, $fail) {
                     if ($value && $value !== Auth::user()->email) {
