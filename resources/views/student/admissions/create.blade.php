@@ -895,7 +895,6 @@
                                 @php $stype = old('student_type', $editing ? ($admission->student_type ?? '') : ''); @endphp
                                 <option value="">-- Select --</option>
                                 <option value="new" {{ $stype=='new' ? 'selected' : '' }}>New</option>
-                                <option value="old" {{ $stype=='old' ? 'selected' : '' }}>Old</option>
                                 <option value="transferee" {{ $stype=='transferee' ? 'selected' : '' }}>Transferee</option>
                             </select>
                         </div>
@@ -1167,13 +1166,7 @@
                     $optionalFiles = ['medical_certificate', 'id_picture'];
                     $stype = old('student_type', $editing ? ($admission->student_type ?? '') : '');
                     $isNewOrTransferee = in_array(strtolower($stype), ['new', 'transferee']);
-                    $isOld = strtolower($stype) === 'old';
-                    $requiredFields = [];
-                    if ($isNewOrTransferee) {
-                        $requiredFields = ['form_137', 'report_card', 'birth_certificate'];
-                    } elseif ($isOld) {
-                        $requiredFields = ['report_card'];
-                    }
+                    $requiredFields = $isNewOrTransferee ? ['form_137', 'report_card', 'birth_certificate'] : [];
                 @endphp
 
                 <div class="doc-grid">
@@ -1459,8 +1452,6 @@
         let requiredDocs = [];
         if (['new', 'transferee'].includes(studentType?.toLowerCase())) {
             requiredDocs = ['form_137', 'report_card', 'birth_certificate'];
-        } else if (studentType?.toLowerCase() === 'old') {
-            requiredDocs = ['report_card'];
         }
         let allOk = true;
         const missing = [];
@@ -1845,7 +1836,6 @@
                     const optFiled = ['medical_certificate','id_picture'];
                     let req = [];
                     if (['new','transferee'].includes(type)) req = ['form_137','report_card','birth_certificate'];
-                    else if (type === 'old') req = ['report_card'];
                     const errs = [];
                     req.forEach(f => {
                         const inp = document.querySelector(`input[name="${f}"]`);

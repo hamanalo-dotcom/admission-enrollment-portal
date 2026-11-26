@@ -142,7 +142,7 @@ class StudentAdmissionController extends Controller
         // Build validation rules - make most fields optional if saving as draft
         $rules = [
             // Student Identifier
-            'student_type' => 'required|in:new,old,transferee',
+            'student_type' => 'required|in:new,transferee',
 
             // Personal Information
             'first_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
@@ -247,10 +247,6 @@ class StudentAdmissionController extends Controller
                     'form_137' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
                     'birth_certificate' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
                 ]);
-            } elseif ($stype === 'old') {
-                $request->validate([
-                    'report_card' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048', // Form 138
-                ]);
             }
         }
 
@@ -341,7 +337,7 @@ session([
         // Build validation rules - make most fields optional if saving as draft
         $rules = [
             // Student Identifier
-            'student_type' => 'required|in:new,old,transferee',
+            'student_type' => 'required|in:new,transferee',
 
             // Personal Information
             'first_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
@@ -454,10 +450,6 @@ session([
                     'report_card' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048', // Form 138
                     'form_137' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
                     'birth_certificate' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
-                ]);
-            } elseif ($stype === 'old') {
-                $request->validate([
-                    'report_card' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048', // Form 138
                 ]);
             }
         }
@@ -667,7 +659,7 @@ public function downloadPdf(Request $request, Admission $admission)
         
         // Build validation rules - make most fields optional if saving as draft
         $rules = [
-            'student_type' => 'required|in:new,old,transferee',
+            'student_type' => 'required|in:new,transferee',
             'first_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
@@ -784,11 +776,6 @@ public function downloadPdf(Request $request, Admission $admission)
                     if (in_array($stype, ['new', 'transferee'])) {
                         // For new/transferee: form_137, report_card, birth_certificate are required
                         if (in_array($fileField, ['form_137', 'report_card', 'birth_certificate'])) {
-                            $isRequired = true;
-                        }
-                    } elseif ($stype === 'old') {
-                        // For old students: only report_card is required
-                        if ($fileField === 'report_card') {
                             $isRequired = true;
                         }
                     }
