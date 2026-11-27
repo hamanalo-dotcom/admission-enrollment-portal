@@ -315,6 +315,12 @@ class RegistrarAdmissionController extends Controller
     {
         $validFields = ['report_card', 'form_137', 'birth_certificate', 'good_moral', 'medical_certificate', 'id_picture'];
         if (! in_array($field, $validFields, true)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid document field.',
+                ], 404);
+            }
             abort(404);
         }
 
@@ -327,6 +333,15 @@ class RegistrarAdmissionController extends Controller
 
         $admission->file_review_status = $current;
         $admission->save();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'field' => $field,
+                'status' => $request->input('status'),
+                'message' => 'Document review saved successfully.',
+            ]);
+        }
 
         return back()->with('success', ucfirst(str_replace('_', ' ', $field)).' marked as '.$request->input('status').'.');
     }

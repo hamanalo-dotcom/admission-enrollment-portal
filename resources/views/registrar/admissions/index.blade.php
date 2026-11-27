@@ -629,6 +629,8 @@
 
                                     @if($admission->$field)
                                         <form method="POST"
+                                              class="file-review-form"
+                                              data-saved-status="{{ $fileStatuses[$field] ?? 'pending' }}"
                                               action="{{ route(
                                                 'registrar.admissions.updateFileStatus',
                                                 ['admission' => $admission->id, 'field' => $field]
@@ -654,9 +656,10 @@
                                             </select>
 
                                             <button type="submit"
-                                                    class="btn btn-sm btn-primary mt-2">
+                                                    class="btn btn-sm btn-primary mt-2 file-review-save-btn">
                                                 Save Review
                                             </button>
+                                            <div class="file-review-feedback small mt-1 d-none" aria-live="polite"></div>
                                         </form>
                                     @else
                                         <span class="badge bg-secondary">
@@ -668,9 +671,8 @@
                         @endforeach
 
                         <small class="text-muted">
-                            Saving a document review currently submits the form
-                            and reloads the page. The individual status is stored
-                            in the admission's file_review_status field.
+                            Each document review saves in the background without reloading the page
+                            and is stored in the admission's file_review_status field.
                         </small>
                     </section>
 
@@ -962,6 +964,115 @@ document.querySelectorAll('[id^="reviewModal"]').forEach(function (modal) {
 
         modal.addEventListener('show.bs.modal', function () {
             showStep(1);
+            modal.querySelectorAll('.file-review-form').forEach(function (form) {
+                const select = form.querySelector('select[name="status"]');
+                if (select && form.dataset.savedStatus) {
+                    select.value = form.dataset.savedStatus;
+                }
+                const feedback = form.querySelector('.file-review-feedback');
+                if (feedback) {
+                    feedback.className = 'file-review-feedback small mt-1 d-none';
+                    feedback.textContent = '';
+                }
+            });
+        });
+
+        modal.querySelectorAll('.file-review-form').forEach(function (form) {
+            const select = form.querySelector('select[name="status"]');
+            const saveBtn = form.querySelector('.file-review-save-btn');
+            const feedback = form.querySelector('.file-review-feedback');
+            const modalBody = modal.querySelector('.modal-body');
+
+            function setFeedback(text, isError) {
+                if (feedback) {
+                    feedback.textContent = text;
+                    feedback.className = 'file-review-feedback small mt-1 ' + (isError ? 'text-danger' : 'text-success');
+                }
+                if (typeof toastr !== 'undefined') {
+                    if (isError) toastr.error(text);
+                    else toastr.success(text);
+                }
+            }
+
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                if (form.dataset.saving === '1') {
+                    return;
+                }
+
+                const previousStatus = form.dataset.savedStatus || (select ? select.value : 'pending');
+                const scrollTop = modalBody ? modalBody.scrollTop : 0;
+                const originalBtnText = saveBtn ? saveBtn.textContent.trim() : 'Save Review';
+
+                form.dataset.saving = '1';
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = 'Saving...';
+                }
+                if (feedback) {
+                    feedback.className = 'file-review-feedback small mt-1 d-none';
+                    feedback.textContent = '';
+                }
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: new FormData(form),
+                        credentials: 'same-origin'
+                    });
+
+                    let data = {};
+                    try {
+                        data = await response.json();
+                    } catch (_) {
+                        data = {};
+                    }
+
+                    if (!response.ok || !data.success) {
+                        if (select) {
+                            select.value = previousStatus;
+                        }
+                        let errMsg = data.message || 'Failed to save document review.';
+                        if (data.errors && typeof data.errors === 'object') {
+                            const firstField = Object.keys(data.errors)[0];
+                            if (firstField && Array.isArray(data.errors[firstField]) && data.errors[firstField].length) {
+                                errMsg = data.errors[firstField][0];
+                            }
+                        }
+                        setFeedback(errMsg, true);
+                        return;
+                    }
+
+                    const confirmedStatus = data.status || (select ? select.value : previousStatus);
+                    form.dataset.savedStatus = confirmedStatus;
+                    if (select) {
+                        select.value = confirmedStatus;
+                        Array.from(select.options).forEach(function (opt) {
+                            opt.defaultSelected = opt.value === confirmedStatus;
+                        });
+                    }
+                    setFeedback(data.message || 'Document review saved successfully.', false);
+                } catch (err) {
+                    if (select) {
+                        select.value = previousStatus;
+                    }
+                    setFeedback('Network error while saving document review. Please try again.', true);
+                } finally {
+                    delete form.dataset.saving;
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = originalBtnText;
+                    }
+                    if (modalBody) {
+                        modalBody.scrollTop = scrollTop;
+                    }
+                }
+            });
         });
 
         showStep(1);

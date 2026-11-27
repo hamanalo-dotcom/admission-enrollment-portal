@@ -344,11 +344,6 @@
                 </a>
             </div>
             <div class="dropdownSmsprofile">
-                <a class="dropdown-a" href="{{ route('registrar.events.index') }}">
-                    <i class="fas fa-bullhorn"></i> Announcements
-                </a>
-            </div>
-            <div class="dropdownSmsprofile">
                 <a class="dropdown-a" href="{{ route('registrar.reports.index') }}">
                     <i class="fas fa-chart-bar"></i> Reports
                 </a>
