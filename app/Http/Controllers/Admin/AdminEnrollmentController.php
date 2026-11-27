@@ -60,8 +60,8 @@ class AdminEnrollmentController extends Controller
 
         $admission = Admission::where('user_id', auth()->id())->first();
         
-        // Get active school year
-        $activeSchoolYear = SchoolYear::where('is_active', true)->first();
+        // Get active school year (excluding hidden)
+        $activeSchoolYear = SchoolYear::where('is_active', true)->where('is_hidden', false)->first();
         
         return view('student.enrollment.create', compact('admission', 'activeSchoolYear'));
     }
@@ -85,7 +85,7 @@ class AdminEnrollmentController extends Controller
 
         // Set default school year to active school year if not provided
         if (empty($validated['school_year'])) {
-            $activeSchoolYear = SchoolYear::where('is_active', true)->first();
+            $activeSchoolYear = SchoolYear::where('is_active', true)->where('is_hidden', false)->first();
             if ($activeSchoolYear) {
                 $validated['school_year'] = $activeSchoolYear->school_year;
             } else {

@@ -26,13 +26,11 @@ class AdminSchoolYearController extends Controller
         // Get school years from school_years table
         $query = SchoolYear::query();
 
-        // Filter out school years that are both deactivated AND hidden (unless show_hidden is requested)
-        if (!$request->has('show_hidden') || !$request->show_hidden) {
-            $query->where(function($q) {
-                $q->where('is_active', true)  // Show active school years (even if hidden)
-                  ->orWhere('is_hidden', false); // Or show inactive but not hidden school years
-            });
-        }
+        // Filter out school years that are both deactivated AND hidden
+        $query->where(function($q) {
+            $q->where('is_active', true)  // Show active school years
+              ->orWhere('is_hidden', false); // Or show inactive but not hidden school years
+        });
 
         // Search by school year
         if ($request->has('search') && $request->search) {
@@ -64,14 +62,8 @@ class AdminSchoolYearController extends Controller
                     ]);
                 }
                 
-                // Check if it should be shown based on filters
-                $shouldAdd = true;
-                if (!$request->has('show_hidden') || !$request->show_hidden) {
-                    // Hide if both deactivated AND hidden
-                    if (!$schoolYearRecord->is_active && $schoolYearRecord->is_hidden) {
-                        $shouldAdd = false;
-                    }
-                }
+                // Hide if both deactivated AND hidden
+                $shouldAdd = $schoolYearRecord->is_active || !$schoolYearRecord->is_hidden;
                 
                 if ($shouldAdd) {
                     $schoolYears->push($schoolYearRecord);
@@ -80,16 +72,14 @@ class AdminSchoolYearController extends Controller
         }
 
         // Filter out school years that are both deactivated AND hidden (for already merged records)
-        if (!$request->has('show_hidden') || !$request->show_hidden) {
-            $schoolYears = $schoolYears->filter(function($sy) {
-                // If it has an id, check the database record
-                if (isset($sy->id)) {
-                    return $sy->is_active || !$sy->is_hidden;
-                }
-                // Virtual records (no id) are always shown
-                return true;
-            });
-        }
+        $schoolYears = $schoolYears->filter(function($sy) {
+            // If it has an id, check the database record
+            if (isset($sy->id)) {
+                return $sy->is_active || !$sy->is_hidden;
+            }
+            // Virtual records (no id) are always shown
+            return true;
+        });
 
         // Sort by school year descending
         $schoolYears = $schoolYears->sortByDesc('school_year')->values();
@@ -238,6 +228,7 @@ class AdminSchoolYearController extends Controller
             SchoolYear::create([
                 'school_year' => $validated['school_year'],
                 'is_active' => $isActive,
+                'is_hidden' => false,
             ]);
         }
 
@@ -273,6 +264,10 @@ class AdminSchoolYearController extends Controller
 
         // Convert checkbox value to boolean
         $isActive = $request->has('is_active') && $request->is_active == '1';
+
+        if ($isActive && $schoolYearRecord->is_hidden) {
+            return back()->with('error', 'Cannot activate a hidden school year.')->withInput();
+        }
 
         // If setting this as active, deactivate all others
         if ($isActive) {
@@ -349,6 +344,10 @@ class AdminSchoolYearController extends Controller
         $currentStatus = $schoolYearRecord->is_active;
         $newStatus = !$currentStatus;
 
+        if ($newStatus && $schoolYearRecord->is_hidden) {
+            return back()->with('error', 'Cannot activate a hidden school year.');
+        }
+
         // If activating this one, deactivate all others
         if ($newStatus) {
             SchoolYear::where('is_active', true)->update(['is_active' => false]);
@@ -377,22 +376,20 @@ class AdminSchoolYearController extends Controller
             return back()->with('error', 'School year not found.');
         }
 
+        if ($schoolYearRecord->is_active && !$schoolYearRecord->is_hidden) {
+            return back()->with('error', 'Cannot hide an active school year. Deactivate it first.');
+        }
+
         $schoolYearRecord->update([
             'is_hidden' => !$schoolYearRecord->is_hidden,
         ]);
 
         $status = $schoolYearRecord->is_hidden ? 'hidden' : 'unhidden';
         
-        // Preserve show_hidden parameter if it was set
-        $redirectParams = [];
-        if ($request->has('show_hidden') && $request->show_hidden) {
-            $redirectParams['show_hidden'] = 1;
-        }
-        
         // Determine the correct route based on the current route
         $routeName = $request->routeIs('registrar.*') ? 'registrar.school-years.index' : 'admin.school-years.index';
         
-        return redirect()->route($routeName, $redirectParams)
+        return redirect()->route($routeName)
             ->with('success', "School year {$status} successfully!");
     }
 

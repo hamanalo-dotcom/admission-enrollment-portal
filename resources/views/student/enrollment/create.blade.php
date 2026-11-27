@@ -237,7 +237,7 @@
                                 
                                 // Fallback: Query directly if not passed
                                 if (!$activeSchoolYearValue) {
-                                    $activeSchoolYearObj = \App\Models\SchoolYear::where('is_active', true)->first();
+                                    $activeSchoolYearObj = \App\Models\SchoolYear::where('is_active', true)->where('is_hidden', false)->first();
                                     $activeSchoolYearValue = $activeSchoolYearObj ? $activeSchoolYearObj->school_year : null;
                                 }
                                 

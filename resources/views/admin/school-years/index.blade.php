@@ -102,24 +102,6 @@
     }
     .btn-sy-outline:hover { background: #5B8BE1; color: #fff; }
 
-    .btn-sy-warning {
-        background: #FEF3C7; color: #92400E; border: 1.5px solid #FCD34D;
-        border-radius: 10px; padding: .42rem 1rem; font-size: .85rem;
-        font-family: 'Poppins', sans-serif; font-weight: 500;
-        display: inline-flex; align-items: center; gap: .4rem;
-        transition: all .2s; text-decoration: none;
-    }
-    .btn-sy-warning:hover { background: #FCD34D; color: #78350F; }
-
-    .btn-sy-recycle {
-        background: #FFF1F0; color: #C0392B; border: 1.5px solid #FBBFBC;
-        border-radius: 10px; padding: .42rem 1rem; font-size: .85rem;
-        font-family: 'Poppins', sans-serif; font-weight: 500;
-        display: inline-flex; align-items: center; gap: .4rem;
-        transition: all .2s; text-decoration: none;
-    }
-    .btn-sy-recycle:hover { background: #FEE2E2; color: #991B1B; }
-
     /* Table */
     .sy-table-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #D0E4FF; }
     .sy-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
@@ -164,8 +146,6 @@
     .btn-icon.hide:hover    { background: #E5E7EB; }
     .btn-icon.unhide  { background: #FEF3C7; color: #92400E; }
     .btn-icon.unhide:hover  { background: #FDE68A; }
-    .btn-icon.trash   { background: #FFF1F0; color: #DC2626; }
-    .btn-icon.trash:hover   { background: #FEE2E2; }
     .btn-icon:disabled, .btn-icon[disabled] { opacity: .4; cursor: not-allowed; pointer-events: none; }
 
     /* Empty state */
@@ -182,94 +162,6 @@
     .sy-modal .form-control:focus { border-color: #5B8BE1; box-shadow: 0 0 0 3px rgba(91,139,225,.2); }
     .sy-modal .form-check-input:checked { background-color: #5B8BE1; border-color: #5B8BE1; }
 
-    /* Soft Delete Confirmation Modal Styles */
-    .soft-delete-modal .modal-content {
-        border-radius: 20px;
-        border: none;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        font-family: 'Poppins', sans-serif;
-        overflow: hidden;
-    }
-    .soft-delete-modal .modal-body {
-        padding: 2.5rem 2rem 1.75rem;
-        text-align: center;
-    }
-    .soft-delete-icon-wrapper {
-        width: 76px;
-        height: 76px;
-        background-color: #FEE2E2;
-        color: #DC2626;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        margin-bottom: 1.25rem;
-    }
-    .soft-delete-modal-title {
-        color: #1E293B;
-        font-weight: 700;
-        font-size: 1.25rem;
-        margin-bottom: 0.6rem;
-    }
-    .soft-delete-modal-message {
-        color: #475569;
-        font-size: 0.95rem;
-        line-height: 1.5;
-        margin-bottom: 0.35rem;
-    }
-    .soft-delete-modal-hint {
-        color: #94A3B8;
-        font-size: 0.8rem;
-        margin-bottom: 0;
-    }
-    .soft-delete-modal .modal-footer {
-        border-top: 1px solid #F1F5F9;
-        padding: 1.25rem 2rem 1.75rem;
-        display: flex;
-        justify-content: center;
-        gap: 0.85rem;
-    }
-    .btn-modal-cancel {
-        background-color: #FFFFFF;
-        color: #475569;
-        border: 1.5px solid #CBD5E1;
-        border-radius: 10px;
-        padding: 0.55rem 1.4rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        font-family: 'Poppins', sans-serif;
-        transition: all 0.2s ease;
-        text-decoration: none;
-    }
-    .btn-modal-cancel:hover {
-        background-color: #F8FAFC;
-        border-color: #94A3B8;
-        color: #1E293B;
-    }
-    .btn-modal-recycle {
-        background-color: #DC2626;
-        color: #FFFFFF;
-        border: 1.5px solid #DC2626;
-        border-radius: 10px;
-        padding: 0.55rem 1.4rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        font-family: 'Poppins', sans-serif;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
-    }
-    .btn-modal-recycle:hover {
-        background-color: #B91C1C;
-        border-color: #B91C1C;
-        color: #FFFFFF;
-        box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35);
-        transform: translateY(-1px);
-    }
-
     /* Modal stacking and backdrop fixes */
     .modal {
         z-index: 1060 !important;
@@ -284,9 +176,6 @@
     <div class="sy-header-banner">
         <h1><i class="fas fa-calendar-alt"></i> Academic School Years</h1>
         <div class="sy-header-actions">
-            <a href="{{ route($routePrefix . '.trashed') }}" class="btn-sy-recycle">
-                <i class="fas fa-trash-restore"></i> Recycle Bin
-            </a>
             <button type="button" class="btn-sy-primary" data-bs-toggle="modal" data-bs-target="#addSchoolYearModal">
                 <i class="fas fa-plus"></i> Add School Year
             </button>
@@ -318,21 +207,9 @@
                     <input type="text" name="search" class="form-control flex-grow-1"
                            placeholder="Search by school year (e.g., 2024-2025)"
                            value="{{ request('search') }}">
-                    @if(request('show_hidden'))
-                        <input type="hidden" name="show_hidden" value="1">
-                    @endif
                     <button type="submit" class="btn-sy-primary">
                         <i class="fas fa-search"></i> Search
                     </button>
-                    @php
-                        $params = request()->except('show_hidden');
-                        $params['show_hidden'] = request('show_hidden') ? 0 : 1;
-                    @endphp
-                    <a href="{{ route($routePrefix . '.index', $params) }}"
-                       class="{{ request('show_hidden') ? 'btn-sy-warning' : 'btn-sy-outline' }}">
-                        <i class="fas fa-{{ request('show_hidden') ? 'eye-slash' : 'eye' }}"></i>
-                        {{ request('show_hidden') ? 'Hide Hidden' : 'Show Hidden' }}
-                    </a>
                 </div>
             </form>
         </div>
@@ -424,28 +301,12 @@
                                         @else
                                             <form action="{{ route($routePrefix . '.toggle-hidden', $schoolYear->school_year) }}" method="POST" style="display:contents;">
                                                 @csrf
-                                                @if(request('show_hidden'))
-                                                    <input type="hidden" name="show_hidden" value="1">
-                                                @endif
                                                 <button type="submit"
                                                         class="btn-icon {{ $isHidden ? 'unhide' : 'hide' }}"
                                                         title="{{ $isHidden ? 'Unhide' : 'Hide' }}">
                                                     <i class="fas fa-{{ $isHidden ? 'eye' : 'eye-slash' }}"></i>
                                                 </button>
                                             </form>
-                                        @endif
-                                        {{-- Soft Delete (Recycle Bin) --}}
-                                        @if($isActive)
-                                            <button class="btn-icon trash" disabled title="Deactivate first to move to recycle bin">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        @else
-                                            <button type="button" 
-                                                    class="btn-icon trash" 
-                                                    title="Move to Recycle Bin"
-                                                    onclick="openSoftDeleteModal('{{ $schoolYear->school_year }}', '{{ route($routePrefix . '.destroy', $schoolYear->school_year) }}')">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
                                         @endif
                                     </div>
                                 </td>
@@ -524,72 +385,13 @@
     </div>
 </div>
 
-{{-- Confirm Soft Delete Modal --}}
-<div class="modal fade soft-delete-modal" id="confirmSoftDeleteModal" tabindex="-1" aria-labelledby="confirmSoftDeleteModalLabel" aria-hidden="true" data-bs-backdrop="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="soft-delete-icon-wrapper">
-                    <i class="fas fa-trash-alt"></i>
-                </div>
-                <h4 class="soft-delete-modal-title" id="confirmSoftDeleteModalLabel">Confirm Soft Delete</h4>
-                <p class="soft-delete-modal-message" id="softDeleteModalMessage">
-                    Are you sure you want to remove the school year <strong id="softDeleteTargetYear"></strong>?
-                </p>
-                <p class="soft-delete-modal-hint">
-                    This school year will be moved to the Recycle Bin and can be restored later.
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">
-                    Cancel
-                </button>
-                <form id="softDeleteForm" method="POST" action="" style="display:inline-block; margin:0;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn-modal-recycle">
-                        <i class="fas fa-trash-alt"></i> Remove
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
-    function openSoftDeleteModal(schoolYear, actionUrl) {
-        var yearElem = document.getElementById('softDeleteTargetYear');
-        var formElem = document.getElementById('softDeleteForm');
-        var modalElem = document.getElementById('confirmSoftDeleteModal');
-
-        if (yearElem) yearElem.textContent = schoolYear;
-        if (formElem) formElem.action = actionUrl;
-
-        if (modalElem) {
-            // Check if bootstrap JS is available
-            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                var deleteModal = bootstrap.Modal.getInstance(modalElem) || new bootstrap.Modal(modalElem);
-                deleteModal.show();
-            } else if (typeof jQuery !== 'undefined' && typeof jQuery.fn.modal !== 'undefined') {
-                $(modalElem).modal('show');
-            } else {
-                // Fallback manual display
-                modalElem.classList.add('show');
-                modalElem.style.display = 'block';
-                modalElem.removeAttribute('aria-hidden');
-                modalElem.setAttribute('aria-modal', 'true');
-            }
-        }
-    }
-
-    // Auto-move modals directly to document.body on load to avoid z-index/stacking context issues
+    // Auto-move modal directly to document.body on load to avoid z-index/stacking context issues
     document.addEventListener('DOMContentLoaded', function() {
-        ['addSchoolYearModal', 'confirmSoftDeleteModal'].forEach(function(modalId) {
-            var m = document.getElementById(modalId);
-            if (m && m.parentNode !== document.body) {
-                document.body.appendChild(m);
-            }
-        });
+        var m = document.getElementById('addSchoolYearModal');
+        if (m && m.parentNode !== document.body) {
+            document.body.appendChild(m);
+        }
     });
 </script>
 
